@@ -17,30 +17,53 @@ When the user requests story generation:
 
 ## Available Templates
 
-- `character` - Create a character profile
+- `character-interview` - Generate interview questions for character development (interactive)
+- `character` - Create a character profile (use after interview conversation)
 - `storyline` - Create a storyline/chapter arc
 - `scene` - Create a detailed scene sketch 
 - `prose` - Generate prose from a scene sketch
 
 ## Usage
 
-### Create a Character
+### Develop a Character (Interactive Process)
 
 When user says something like:
+- "Develop a character named Bo, age 15, male"
 - "Create a character that is a skateboarder, male, age 15..."
-- "Generate a character that is a postman who always says I can't work like this__..."
-- "Develop a character that is a bike messenger, female, age 19..."
+- "I want to develop a character who is a postman..."
 
-Run:
+Use the **two-step interactive process**:
+
+**Step 1: Generate Interview Questions**
 ```bash
-{baseDir}/run.js character "[user's description]"
+{baseDir}/run.js character-interview "[user's description]"
 ```
 
-The output will be a complete prompt. Send it to the LLM to generate the character.
+This generates 8-10 personalized questions about voice, transformation lines, and specific details.
 
-**Example:**
+**Step 2: Have Conversation**
+- Present the questions to the user
+- Have a natural conversation gathering their answers
+- Keep the full conversation in context
+
+**Step 3: Generate Final Character**
 ```bash
-{baseDir}/run.js character "skateboarder, male, age 15"
+{baseDir}/run.js character "[original description]"
+```
+
+The character template will use the conversation history (questions + answers) to create an authentic character.
+
+**Example Workflow:**
+```
+User: "Develop a character named Bo, age 15, male"
+
+You: 
+1. Run: {baseDir}/run.js character-interview "Bo, age 15, male"
+2. Show the generated questions to user
+3. User answers the questions in conversation
+4. Run: {baseDir}/run.js character "Bo, age 15, male"
+   (with full conversation in context)
+5. Generate and show the complete character profile
 ```
 
 ### Create a Scene Sketch

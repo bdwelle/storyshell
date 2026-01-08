@@ -15,12 +15,21 @@ This character will be a key figure in the narrative—defined by their appearan
 
 ## Task
 
-Generate a complete character definition based on the character description provided and the story context assembled above, using an interactive Q&A process based on prompts/method-characters.md 
+Generate a complete character definition based on:
+- The character description provided
+- The story context assembled above
+- The conversation/interview answers about this character
+
+Use the conversation history (questions and answers) to inform every section of the character. The user has already explored:
+- How this character talks (voice & speech)
+- Their transformation lines (what they hide, fear, need)
+- Specific details (behaviors, mannerisms, possessions)
 
 Fill in all sections with vivid, specific content that:
+- Reflects the voice and speech patterns discovered in conversation
+- Integrates the transformation lines into Want vs. Need
+- Uses the specific details gathered to create authenticity
 - Fits the world, genre, and narrative goals defined above
-- Follows Method Character technique (understanding character through desire, obstacle, action)
-- Establishes clear Want vs. Need (external goal vs. internal growth need)
 - Creates authentic relationships with other story characters
 - Defines a compelling change arc
 
