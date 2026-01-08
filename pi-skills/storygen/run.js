@@ -21,6 +21,12 @@ function warn(message) {
   log('warning', { message });
 }
 
+////////////////////////////////
+// MAIN 
+
+// Log start of execution
+log('START storygen skill');
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 
@@ -133,3 +139,6 @@ if (userPrompt) {
 // Output to stdout
 console.log(output);
 log('output', { bytes: output.length });
+
+// Log END of execution
+log('END storygen skill');

@@ -21,7 +21,8 @@ When the user requests story generation:
 - `character` - Create a character profile (use after interview conversation)
 - `scene-suggest` - Brainstorm 3-5 scene concepts (quick exploration)
 - `scene` - Create a detailed scene sketch (full development)
-- `storyline` - Create a storyline/chapter arc
+- `storyline-suggest` - Brainstorm 3-5 storyline concepts (quick exploration)
+- `storyline` - Create a storyline/chapter arc (full development)
 - `prose` - Generate prose from a scene sketch
 
 ## Usage
@@ -116,23 +117,52 @@ User: "I like #2, develop that"
 You: Run scene with concept from #2
 ```
 
-### Create a Storyline
+### Suggest Storyline Concepts (Brainstorming)
 
 When user says something like:
-- "Create a storyline about..."
-- "Develop a storyline where..."
-- "Generate a storyline with..."
+- "Suggest some storylines about..."
+- "Give me storyline ideas for..."
+- "Brainstorm storylines with..."
 
 Run:
 ```bash
-{baseDir}/run.js storyline "[user's description]"
+{baseDir}/run.js storyline-suggest "[user's description]"
 ```
 
-The output will be a complete prompt. Send it to the LLM to generate the storyline.
+This generates 3-5 storyline arcs with character journeys, global values, and core conflicts.
 
 **Example:**
 ```bash
-{baseDir}/run.js storyline "skateboarder confronted by robot cop "
+{baseDir}/run.js storyline-suggest "skateboarder and robot cop"
+```
+
+**Then:** User picks one concept and you develop it fully with `storyline`.
+
+### Create a Storyline (Full Development)
+
+When user says something like:
+- "Create a storyline about..."
+- "Develop storyline #3" (after suggestions)
+- "Generate a full storyline for..."
+
+Run:
+```bash
+{baseDir}/run.js storyline "[user's description or chosen concept]"
+```
+
+The output will be a complete prompt. Send it to the LLM to generate the full storyline.
+
+**Example:**
+```bash
+{baseDir}/run.js storyline "skateboarder confronted by robot cop"
+```
+
+**Workflow Example:**
+```
+User: "Suggest storylines about a skateboarder and robot cop"
+You: Run storyline-suggest, show 3-5 options
+User: "I love #3, develop that"
+You: Run storyline with concept from #3
 ```
 
 ### Write prose
