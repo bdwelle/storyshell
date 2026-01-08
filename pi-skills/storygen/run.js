@@ -21,6 +21,31 @@ function warn(message) {
   log('warning', { message });
 }
 
+// Parse includes from YAML frontmatter
+function parseIncludesFromFrontmatter(frontmatterText) {
+  const includes = [];
+  const lines = frontmatterText.split('\n');
+  let inIncludesSection = false;
+
+  for (const line of lines) {
+    if (line.match(/^includes:/)) {
+      inIncludesSection = true;
+      continue;
+    }
+    if (inIncludesSection) {
+      const includeMatch = line.match(/^\s*-\s+(.+)$/);
+      if (includeMatch) {
+        includes.push(includeMatch[1].trim());
+      } else if (line.match(/^\S/)) {
+        // New top-level key, stop parsing includes
+        break;
+      }
+    }
+  }
+  
+  return includes;
+}
+
 ////////////////////////////////
 // MAIN 
 
@@ -50,6 +75,9 @@ log('run', {
   user_prompt: userPrompt ? `"${userPrompt}"` : 'none'
 });
 
+////////////////
+// TEMPLATE
+
 // Read template file from root tpl/ directory
 const templatePath = path.join(storeygenRoot, 'tpl', `${templateName}.md`);
 if (!fs.existsSync(templatePath)) {
@@ -75,32 +103,35 @@ if (!match) {
 
 const [, frontmatterText, templateBody] = match;
 
+////////////////
+// INCLUDES (context)
+
 // Auto-include project context first (from current working directory)
 const projectMainPath = path.join(process.cwd(), 'inc/main.md');
 const includes = [];
 
-// Always try to include project inc/main.md first
-includes.push('inc/main.md');  // This will be resolved from cwd
-
-// Parse additional includes from frontmatter
-const lines = frontmatterText.split('\n');
-let inIncludesSection = false;
-
-for (const line of lines) {
-  if (line.match(/^includes:/)) {
-    inIncludesSection = true;
-    continue;
+// Check if project main.md exists and has its own includes
+if (fs.existsSync(projectMainPath)) {
+  const projectMainContent = fs.readFileSync(projectMainPath, 'utf8');
+  const projectMainMatch = projectMainContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+  
+  if (projectMainMatch) {
+    // Project main.md has frontmatter - parse its includes first
+    const projectMainIncludes = parseIncludesFromFrontmatter(projectMainMatch[1]);
+    includes.push(...projectMainIncludes);
+    log('project_main_includes', { count: projectMainIncludes.length, files: JSON.stringify(projectMainIncludes) });
   }
-  if (inIncludesSection) {
-    const includeMatch = line.match(/^\s*-\s+(.+)$/);
-    if (includeMatch) {
-      includes.push(includeMatch[1].trim());
-    } else if (line.match(/^\S/)) {
-      // New top-level key, stop parsing includes
-      break;
-    }
-  }
+  
+  // Then add project main.md itself
+  includes.push('inc/main.md');
+} else {
+  // Project main.md doesn't exist, but still add to list (will be handled gracefully)
+  includes.push('inc/main.md');
 }
+
+// Parse additional includes from template frontmatter
+const templateIncludes = parseIncludesFromFrontmatter(frontmatterText);
+includes.push(...templateIncludes);
 
 // Process includes with multi-path resolution
 let output = '';
@@ -119,7 +150,14 @@ if (includes.length > 0) {
     for (const incPath of searchPaths) {
       if (fs.existsSync(incPath)) {
         try {
-          const content = fs.readFileSync(incPath, 'utf8');
+          let content = fs.readFileSync(incPath, 'utf8');
+          
+          // Strip frontmatter if present (only include the body)
+          const frontmatterMatch = content.match(/^---\n[\s\S]*?\n---\n([\s\S]*)$/);
+          if (frontmatterMatch) {
+            content = frontmatterMatch[1];
+          }
+          
           output += content + '\n\n';
           
           // Track if this was the project context
@@ -165,4 +203,4 @@ console.log(output);
 log('output', { bytes: output.length });
 
 // Log END of execution
-log('END storygen skill');
+log("END storygen skill\n");
