@@ -110,24 +110,29 @@ const [, frontmatterText, templateBody] = match;
 const projectMainPath = path.join(process.cwd(), 'inc/main.md');
 const includes = [];
 
-// Check if project main.md exists and has its own includes
-if (fs.existsSync(projectMainPath)) {
-  const projectMainContent = fs.readFileSync(projectMainPath, 'utf8');
-  const projectMainMatch = projectMainContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
-  
-  if (projectMainMatch) {
-    // Project main.md has frontmatter - parse its includes first
-    const projectMainIncludes = parseIncludesFromFrontmatter(projectMainMatch[1]);
-    includes.push(...projectMainIncludes);
-    log('project_main_includes', { count: projectMainIncludes.length, files: JSON.stringify(projectMainIncludes) });
-  }
-  
-  // Then add project main.md itself
-  includes.push('inc/main.md');
-} else {
-  // Project main.md doesn't exist, but still add to list (will be handled gracefully)
-  includes.push('inc/main.md');
+// Check if project main.md exists - REQUIRED
+if (!fs.existsSync(projectMainPath)) {
+  console.error(`Error: Project context not found: ${projectMainPath}`);
+  console.error('');
+  console.error('You must have inc/main.md in your project directory.');
+  console.error('Run from your project directory with an inc/main.md file.');
+  log('error', { type: 'project_context_required', path: projectMainPath });
+  process.exit(1);
 }
+
+// Read and parse project main.md
+const projectMainContent = fs.readFileSync(projectMainPath, 'utf8');
+const projectMainMatch = projectMainContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
+
+if (projectMainMatch) {
+  // Project main.md has frontmatter - parse its includes first
+  const projectMainIncludes = parseIncludesFromFrontmatter(projectMainMatch[1]);
+  includes.push(...projectMainIncludes);
+  log('project_main_includes', { count: projectMainIncludes.length, files: JSON.stringify(projectMainIncludes) });
+}
+
+// Then add project main.md itself
+includes.push('inc/main.md');
 
 // Parse additional includes from template frontmatter
 const templateIncludes = parseIncludesFromFrontmatter(frontmatterText);
@@ -135,9 +140,6 @@ includes.push(...templateIncludes);
 
 // Process includes with multi-path resolution
 let output = '';
-
-// Track if project context was included
-let projectContextIncluded = false;
 
 if (includes.length > 0) {
   for (const inc of includes) {
@@ -159,12 +161,6 @@ if (includes.length > 0) {
           }
           
           output += content + '\n\n';
-          
-          // Track if this was the project context
-          if (inc === 'inc/main.md' && incPath === projectMainPath) {
-            projectContextIncluded = true;
-          }
-          
           log('include', { file: inc, resolved: incPath, status: 'ok' });
           resolved = true;
           break;
@@ -176,18 +172,10 @@ if (includes.length > 0) {
     }
 
     if (!resolved) {
-      // Only warn if it's NOT the auto-included project context
-      if (inc !== 'inc/main.md') {
-        warn(`Include file not found: ${inc}`);
-      }
+      warn(`Include file not found: ${inc}`);
       log('include', { file: inc, status: 'missing' });
     }
   }
-}
-
-// Log whether project context was found
-if (!projectContextIncluded) {
-  log('project_context', { status: 'not_found', path: projectMainPath });
 }
 
 // Add template body

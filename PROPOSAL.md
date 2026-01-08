@@ -49,7 +49,7 @@ User request → run.js → concatenate includes + template → stdout → Pi �
 │       └── tpl/                 # Skill templates (POC/examples)
 │           ├── character.md
 │           └── scene.md
-└── proj/                        # Example story project
+└── example-project/                        # Example story project
     │   └── SYSTEM.md              # Project-specific system prompt
     ├── inc/
     │   └── main.md              # Project-specific context

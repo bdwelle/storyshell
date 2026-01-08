@@ -207,8 +207,8 @@ You:
 
 ## Notes
 
-- **Project Context Auto-Included:** `run.js` automatically includes `inc/main.md` from the current working directory (your project) if it exists. This pulls in project-specific context (characters, world, tone, etc.) for every generation.
+- **Project Context Required:** `run.js` requires `inc/main.md` in the current working directory. This file contains project-specific context (characters, world, tone, etc.). Processing will fail with an error if not found.
 - Templates also include story methodology files (Storygrid, Method Writing, etc.) from their frontmatter
 - The `run.js` script logs all operations to `storygen.log` in the current directory
-- Missing include files generate warnings but don't stop processing (except project context which is silent if not found)
-- User should be in their project directory when running commands to get project context
+- Missing include files (other than inc/main.md) generate warnings but don't stop processing
+- User must be in their project directory when running commands
