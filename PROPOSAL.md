@@ -341,15 +341,13 @@ Missing includes generate a warning to stderr but don't stop processing.
 
 ## Design Questions (Resolved)
 
-1. **Include resolution**: ✓ Templates can include project-local files. Include paths are resolved relative to skill directory, current working directory, or as absolute paths.
+1. **Output saving**: ✓ `output` frontmatter is informational only for Pi. Pi handles saving naturally through user requests.
 
-2. **Output saving**: ✓ `output` frontmatter is informational only for Pi. Pi handles saving naturally through user requests.
+2. **Template discovery**: ✓ Not needed. SKILL.md documents all available templates.
 
-3. **Template discovery**: ✓ Not needed. SKILL.md documents all available templates.
+3. **Error handling**: ✓ Print warning to stderr for missing includes/templates, continue processing with what's available.
 
-4. **Error handling**: ✓ Print warning to stderr for missing includes/templates, continue processing with what's available.
-
-5. **Logging**: ✓ All meaningful operations logged to `storygen.log` in current directory with single-line entries (timestamp, operation, parameters, status).
+4. **Logging**: ✓ All meaningful operations logged to `storygen.log` in current directory with single-line entries (timestamp, operation, parameters, status).
 
 ## Next Steps
 

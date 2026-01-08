@@ -89,7 +89,6 @@ if (includes.length > 0) {
   for (const inc of includes) {
     let resolved = false;
     const searchPaths = [
-      path.join(baseDir, inc),                    // Relative to skill directory
       path.join(process.cwd(), inc),              // Relative to current directory
       path.isAbsolute(inc) ? inc : null           // Absolute path
     ].filter(p => p !== null);
