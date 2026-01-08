@@ -19,8 +19,9 @@ When the user requests story generation:
 
 - `character-interview` - Generate interview questions for character development (interactive)
 - `character` - Create a character profile (use after interview conversation)
+- `scene-suggest` - Brainstorm 3-5 scene concepts (quick exploration)
+- `scene` - Create a detailed scene sketch (full development)
 - `storyline` - Create a storyline/chapter arc
-- `scene` - Create a detailed scene sketch 
 - `prose` - Generate prose from a scene sketch
 
 ## Usage
@@ -67,23 +68,52 @@ You:
 5. Generate and show the complete character profile
 ```
 
-### Create a Scene Sketch
+### Suggest Scene Concepts (Brainstorming)
+
+When user says something like:
+- "Suggest some scenes about..."
+- "Give me scene ideas for..."
+- "Brainstorm scenes with..."
+
+Run:
+```bash
+{baseDir}/run.js scene-suggest "[user's description]"
+```
+
+This generates 3-5 quick scene concepts with value shifts and turning points.
+
+**Example:**
+```bash
+{baseDir}/run.js scene-suggest "skateboarder and robot cop"
+```
+
+**Then:** User picks one concept and you develop it fully with `scene`.
+
+### Create a Scene Sketch (Full Development)
 
 When user says something like:
 - "Create a scene about..."
 - "Sketch a scene where..."
-- "Generate a scene with..."
+- "Develop scene #2" (after suggestions)
 
 Run:
 ```bash
-{baseDir}/run.js scene "[user's description]"
+{baseDir}/run.js scene "[user's description or chosen concept]"
 ```
 
-The output will be a complete prompt. Send it to the LLM to generate the scene sketch.
+The output will be a complete prompt. Send it to the LLM to generate the full scene sketch.
 
 **Example:**
 ```bash
 {baseDir}/run.js scene "artist meets businessman at gallery opening"
+```
+
+**Workflow Example:**
+```
+User: "Suggest scenes about a skateboarder and robot cop"
+You: Run scene-suggest, show 3-5 options
+User: "I like #2, develop that"
+You: Run scene with concept from #2
 ```
 
 ### Create a Storyline

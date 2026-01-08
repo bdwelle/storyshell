@@ -288,6 +288,14 @@ Missing includes generate a warning to stderr but don't stop processing.
 3. Manually create tpl/character.md
 4. Test all templates with run.js
 
+### Phase 1C: Interactive Character Generation 
+update character generation process so that
+   1. Runs character-interview.md → gets personalized questions
+   2. Presents questions to user
+   3. Conversation happens (user answers)
+   4. Runs character.md with full conversation as context
+   5. Generates authentic character using Method Writing principles
+
 ### Phase 2: Suggestion Templates
 1. Create lightweight versions (_suggest variants)
 2. Focus on brainstorming vs. full structure
