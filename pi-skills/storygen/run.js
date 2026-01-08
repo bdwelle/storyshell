@@ -75,8 +75,14 @@ if (!match) {
 
 const [, frontmatterText, templateBody] = match;
 
-// Parse includes from frontmatter
+// Auto-include project context first (from current working directory)
+const projectMainPath = path.join(process.cwd(), 'inc/main.md');
 const includes = [];
+
+// Always try to include project inc/main.md first
+includes.push('inc/main.md');  // This will be resolved from cwd
+
+// Parse additional includes from frontmatter
 const lines = frontmatterText.split('\n');
 let inIncludesSection = false;
 
@@ -98,12 +104,16 @@ for (const line of lines) {
 
 // Process includes with multi-path resolution
 let output = '';
+
+// Track if project context was included
+let projectContextIncluded = false;
+
 if (includes.length > 0) {
   for (const inc of includes) {
     let resolved = false;
     const searchPaths = [
-      path.join(process.cwd(), inc),              // Relative to current directory
-      path.isAbsolute(inc) ? inc : null           // Absolute path
+      path.join(process.cwd(), inc),              // 1. Relative to current directory (PROJECT)
+      path.isAbsolute(inc) ? inc : null           // 2. Absolute path
     ].filter(p => p !== null);
 
     for (const incPath of searchPaths) {
@@ -111,6 +121,12 @@ if (includes.length > 0) {
         try {
           const content = fs.readFileSync(incPath, 'utf8');
           output += content + '\n\n';
+          
+          // Track if this was the project context
+          if (inc === 'inc/main.md' && incPath === projectMainPath) {
+            projectContextIncluded = true;
+          }
+          
           log('include', { file: inc, resolved: incPath, status: 'ok' });
           resolved = true;
           break;
@@ -122,10 +138,18 @@ if (includes.length > 0) {
     }
 
     if (!resolved) {
-      warn(`Include file not found: ${inc}`);
+      // Only warn if it's NOT the auto-included project context
+      if (inc !== 'inc/main.md') {
+        warn(`Include file not found: ${inc}`);
+      }
       log('include', { file: inc, status: 'missing' });
     }
   }
+}
+
+// Log whether project context was found
+if (!projectContextIncluded) {
+  log('project_context', { status: 'not_found', path: projectMainPath });
 }
 
 // Add template body
