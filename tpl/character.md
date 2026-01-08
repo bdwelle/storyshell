@@ -1,3 +1,12 @@
+---
+type: template
+id: character
+includes:
+  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+  - /Users/bdwelle/lib/storygen/inc/method-writing.md
+  - /Users/bdwelle/lib/storygen/inc/method-characters.md
+---
+
 # Character Generation Task
 
 You are creating a detailed character definition for a story.
@@ -54,6 +63,9 @@ modified: {today's date}
 - [Trait 1 - specific and observable]
 - [Trait 2 - specific and observable]
 - [Trait 3 - specific and observable]
+
+## Speech
+[Character idiolect, speech patterns, accent, slang. Include examples.]
 
 ## Backstory
 [Character history and formative experiences that shaped who they are now. Include specific events, relationships, and turning points.]

@@ -273,19 +273,19 @@ Missing includes generate a warning to stderr but don't stop processing.
 
 ## Implementation Plan
 
-### Phase 1A: Scene Template (Based on Existing Examples)
+### Phase 1A: Scene Template
 1. Write run.js with:
    - Template processing (read, parse YAML frontmatter, concatenate)
    - Include resolution 
    - Logging function that writes single-line entries to storygen.log
    - Error handling (warnings to stderr, continue processing)
-2. Port `tpl-to-port/scene.md` to create tpl/scene.md
+2. Manually create tpl/scene.md
 3. Test scene.md with run.js
 
-### Phase 1B: Core Templates (Based on Existing Examples)
-1. Port `tpl-to-port/storyline.md` to create tpl/storyline.md
-2. Port `tpl-to-port/prose.md` to create tpl/prose.md
-3. Port `tpl-to-port/character.md` to create tpl/character.md
+### Phase 1B: Other Core Templates 
+1. Manually create tpl/storyline.md
+2. Manually create tpl/prose.md
+3. Manually create tpl/character.md
 4. Test all templates with run.js
 
 ### Phase 2: Suggestion Templates

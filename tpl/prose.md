@@ -1,3 +1,11 @@
+---
+type: template
+id: prose
+includes:
+  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+  - /Users/bdwelle/lib/storygen/inc/method-writing.md
+---
+
 # Prose Generation Task
 
 You are generating full narrative prose from a scene sketch blueprint.
@@ -54,14 +62,12 @@ Follow this exact structure for your generated scene:
 
 ```yaml
 ---
-type: scene
-id: {scene-id}
+type: prose
+id: {id}
 status: complete
 title: {title}
 chapter: {chapter}
-scene: {scene}
-sketch: {sketch-id}
-storyline: {storyline}
+scene: {scene-id}
 pov: {pov}
 location: {location}
 value: {value}

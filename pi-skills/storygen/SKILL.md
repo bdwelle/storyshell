@@ -24,6 +24,25 @@ When the user requests story generation:
 
 ## Usage
 
+### Create a Character
+
+When user says something like:
+- "Create a character that is a skateboarder, male, age 15..."
+- "Generate a character that is a postman who always says I can't work like this__..."
+- "Develop a character that is a bike messenger, female, age 19..."
+
+Run:
+```bash
+{baseDir}/run.js character "[user's description]"
+```
+
+The output will be a complete prompt. Send it to the LLM to generate the character.
+
+**Example:**
+```bash
+{baseDir}/run.js character "skateboarder, male, age 15"
+```
+
 ### Create a Scene Sketch
 
 When user says something like:
@@ -60,6 +79,24 @@ The output will be a complete prompt. Send it to the LLM to generate the storyli
 **Example:**
 ```bash
 {baseDir}/run.js storyline "skateboarder confronted by robot cop "
+```
+
+### Write prose
+
+When user says something like:
+- "Write prose for scenes/skateboarder-robot-cop.md"
+- "Generate writing for scenes/skateboarder-robot-cop.md"
+
+Run:
+```bash
+{baseDir}/run.js prose "[user's description]"
+```
+
+The output will be a complete prompt. Send it to the LLM to generate the prose.
+
+**Example:**
+```bash
+{baseDir}/run.js prose "scenes/skateboarder-robot-cop.md"
 ```
 
 ### Saving Generated Content
