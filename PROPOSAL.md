@@ -254,7 +254,7 @@ All `run.js` commands run from the project directory. Templates can reference in
 ---
 includes:
   - inc/main.md               			# Relatve path for Project-specific context
-  - /lib/storygen/inc/storygrid.md       # Absolute path 
+  - /Users/bdwelle/lib/storygen/inc/storygrid.md       # Absolute path 
 ---
 ```
 

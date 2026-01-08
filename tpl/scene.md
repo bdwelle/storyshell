@@ -1,3 +1,11 @@
+---
+type: template
+id: scene
+includes:
+  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+  - /Users/bdwelle/lib/storygen/inc/method-writing.md
+---
+
 # Scene Generation Task
 
 You are creating a detailed scene schematic for a story.

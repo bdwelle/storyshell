@@ -17,12 +17,9 @@ When the user requests story generation:
 
 ## Available Templates
 
-Currently available:
-- `scene` - Create a scene sketch (structural blueprint with beats, value progression, Five Commandments)
-
-Coming soon:
 - `character` - Create a character profile
 - `storyline` - Create a storyline/chapter arc
+- `scene` - Create a detailed scene sketch 
 - `prose` - Generate prose from a scene sketch
 
 ## Usage
@@ -44,6 +41,25 @@ The output will be a complete prompt. Send it to the LLM to generate the scene s
 **Example:**
 ```bash
 {baseDir}/run.js scene "artist meets businessman at gallery opening"
+```
+
+### Create a Storyline
+
+When user says something like:
+- "Create a storyline about..."
+- "Develop a storyline where..."
+- "Generate a storyline with..."
+
+Run:
+```bash
+{baseDir}/run.js storyline "[user's description]"
+```
+
+The output will be a complete prompt. Send it to the LLM to generate the storyline.
+
+**Example:**
+```bash
+{baseDir}/run.js storyline "skateboarder confronted by robot cop "
 ```
 
 ### Saving Generated Content

@@ -83,12 +83,3 @@ modified: {today's date}
 ## Generate Now
 
 Using the sketch blueprint above, the story context provided, and the template structure here, **generate the complete scene prose now**.
-
-Make sure to:
-- Follow every beat from the sketch without exception
-- Use vivid Image/Moment details (not action summaries)
-- Include all Five Commandments components
-- Achieve the value progression ({opening_value} → {closing_value})
-- Maintain tight POV in {pov}'s perspective
-- Meet or exceed {word_count} words
-- Create prose that is complete and ready to use (not a draft)

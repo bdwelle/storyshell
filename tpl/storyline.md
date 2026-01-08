@@ -1,3 +1,10 @@
+---
+type: template
+id: storyline
+includes:
+  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+---
+
 # Storyline Development Task
 
 You are creating a detailed storyline (narrative arc spanning a chapter or section).
@@ -126,6 +133,9 @@ modified: {today's date}
 
 ## Notes for Scene Development
 
+These are notes included here for eventual, subsequent scene development. 
+DO NOT generate scenes now. 
+
 **Tone:**
 - [Overall storyline tone]
 - [Key scene tone note]
@@ -137,16 +147,3 @@ modified: {today's date}
 **Character Arc:**
 - [How the POV character changes through this storyline]
 ```
-
-## Generate Now
-
-Using the template structure above and the story context provided, **generate the complete storyline now**.
-
-Make sure to:
-- Choose an appropriate `id` that's lowercase and hyphen-separated (e.g., `1-elena-calculated-risk`)
-- Write a thruline that could be a logline
-- Define 3-5 scenes with clear Turning Points and value shifts
-- Include all Five Commandments components (not just labels, but real content)
-- Track value progressions with numbers across each scene
-- Make POV notes specific to the character (voice patterns, physical tells, sensations)
-- Ensure each scene logically causes the next (causality)

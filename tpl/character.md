@@ -78,14 +78,3 @@ modified: {today's date}
 
 **Change Arc:** [positive (growth)/negative (descent)/flat (unchanging)]
 ```
-
-## Generate Now
-
-Using the template structure above and the story context provided, **generate the complete character definition now**.
-
-Replace all bracketed placeholders with actual content. Make sure to:
-- Create a distinctive physical presence (specific details, not generic descriptions)
-- Ground the character in specific backstory events
-- Establish clear Want vs. Need tension (the core of character conflict)
-- Define at least 2-3 relationships with specific complexity
-- Choose a realistic change arc based on their role and the story goals
