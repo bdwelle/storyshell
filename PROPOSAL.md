@@ -1,8 +1,8 @@
-# Storygen Development Proposal
+# Storyshell Development Proposal
 
 ## Overview
 
-Storygen is a simple story generation/fiction writing assistant implemented as a Pi skill. It uses markdown templates with embedded instructions and YAML frontmatter to generate characters, scenes, storylines, and prose.
+Storyshell is a simple story generation/fiction writing assistant implemented as a Pi skill. It uses markdown templates with embedded instructions and YAML frontmatter to generate characters, scenes, storylines, and prose.
 
 ## Core Concept
 
@@ -21,7 +21,7 @@ User request → run.js → concatenate includes + template → stdout → Pi �
 ### Directory Structure
 
 ```
-/Users/bdwelle/lib/storygen/
+/Users/bdwelle/lib/storyshell/
 ├── PROMPT.md                    # Original requirements
 ├── PROPOSAL.md                  # This document
 ├── inc/                         # Shared context files (reusable across projects)
@@ -34,14 +34,14 @@ User request → run.js → concatenate includes + template → stdout → Pi �
 │   ├── storygrid.md
 │   └── themes.md
 ├── tpl/                         		# Templates
-├── tpl-to-port/                         # Reference Templates to port from another storygen project 
+├── tpl-to-port/                         # Reference Templates to port from another storyshell project 
 │   ├── character.md
 │   ├── prose.md
 │   ├── scene.md
 │   ├── storyline-suggest.md
 │   └── storyline.md
 ├── pi-skills/
-│   └── storygen/                # Pi skill (symlinked to ~/.pi/agent/skills/storygen)
+│   └── storyshell/                # Pi skill (symlinked to ~/.pi/agent/skills/storyshell)
 │       ├── SKILL.md             # Pi skill definition
 │       ├── run.js               # Template processor
 │       ├── inc/
@@ -107,7 +107,7 @@ Single purpose: Process templates and output complete prompts to stdout.
 - Complex template logic (keep it simple)
 
 **Logging**:
-All meaningful operations are logged to `storygen.log` in the current directory with single-line entries:
+All meaningful operations are logged to `storyshell.log` in the current directory with single-line entries:
 ```
 2026-01-07T20:26:15.123Z run template=scene user_prompt="artist meets businessman"
 2026-01-07T20:26:15.124Z include file=inc/main.md status=ok
@@ -254,7 +254,7 @@ All `run.js` commands run from the project directory. Templates can reference in
 ---
 includes:
   - inc/main.md               			# Relatve path for Project-specific context
-  - /Users/bdwelle/lib/storygen/inc/storygrid.md       # Absolute path 
+  - /Users/bdwelle/lib/storyshell/inc/storygrid.md       # Absolute path 
 ---
 ```
 
@@ -277,7 +277,7 @@ Missing includes generate a warning to stderr but don't stop processing.
 1. Write run.js with:
    - Template processing (read, parse YAML frontmatter, concatenate)
    - Include resolution 
-   - Logging function that writes single-line entries to storygen.log
+   - Logging function that writes single-line entries to storyshell.log
    - Error handling (warnings to stderr, continue processing)
 2. Manually create tpl/scene.md
 3. Test scene.md with run.js
@@ -355,7 +355,7 @@ update character generation process so that
 
 3. **Error handling**: ✓ Print warning to stderr for missing includes/templates, continue processing with what's available.
 
-4. **Logging**: ✓ All meaningful operations logged to `storygen.log` in current directory with single-line entries (timestamp, operation, parameters, status).
+4. **Logging**: ✓ All meaningful operations logged to `storyshell.log` in current directory with single-line entries (timestamp, operation, parameters, status).
 
 ## Next Steps
 

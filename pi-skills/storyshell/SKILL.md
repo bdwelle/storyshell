@@ -1,9 +1,9 @@
 ---
-name: storygen
+name: storyshell
 description: Simple story generation assistant for fiction writing. Use for creating characters, scenes, storylines, and prose. Trigger words: character, scene, storyline, story, prose, fiction, writing.
 ---
 
-# Storygen
+# Storyshell
 
 Story generation system using templates with embedded instructions for fiction writing.
 
@@ -209,6 +209,6 @@ You:
 
 - **Project Context Required:** `run.js` requires `inc/main.md` in the current working directory. This file contains project-specific context (characters, world, tone, etc.). Processing will fail with an error if not found.
 - Templates also include story methodology files (Storygrid, Method Writing, etc.) from their frontmatter
-- The `run.js` script logs all operations to `storygen.log` in the current directory
+- The `run.js` script logs all operations to `storyshell.log` in the current directory
 - Missing include files (other than inc/main.md) generate warnings but don't stop processing
 - User must be in their project directory when running commands

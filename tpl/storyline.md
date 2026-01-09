@@ -2,7 +2,7 @@
 type: template
 id: storyline
 includes:
-  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+  - inc/storygrid.md
 ---
 
 # Storyline Development Task

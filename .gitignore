@@ -15,14 +15,8 @@ storygen.log
 node_modules/
 npm-debug.log*
 
-# Project-specific generated content (optional - user can override)
-proj/characters/*.md
-proj/scenes/*.md
-proj/storylines/*.md
-proj/prose/*.md
+# Symlinks
+.pi
 
-# Keep directory structure
-!proj/characters/.gitkeep
-!proj/scenes/.gitkeep
-!proj/storylines/.gitkeep
-!proj/prose/.gitkeep
+# Example project
+

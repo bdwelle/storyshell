@@ -1,6 +1,6 @@
 ---
 includes:
-  - /Users/bdwelle/lib/storygen/inc/storygrid.md
+  - inc/storygrid.md
 output: (stdout - no file output)
 ---
 

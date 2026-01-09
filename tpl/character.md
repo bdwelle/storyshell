@@ -2,9 +2,9 @@
 type: template
 id: character
 includes:
-  - /Users/bdwelle/lib/storygen/inc/storygrid.md
-  - /Users/bdwelle/lib/storygen/inc/method-writing.md
-  - /Users/bdwelle/lib/storygen/inc/method-characters.md
+  - inc/storygrid.md
+  - inc/method-writing.md
+  - inc/method-characters.md
 ---
 
 # Character Generation Task

@@ -1,6 +1,6 @@
 ---
 includes:
-  - /Users/bdwelle/lib/storygen/inc/method-characters.md
+  - inc/method-characters.md
 output: (interactive - no file output)
 ---
 

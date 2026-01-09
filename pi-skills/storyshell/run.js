@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
-// Logging function - single-line entries to storygen.log
+// Logging function - single-line entries to storyshell.log
 function log(operation, details = {}) {
   const timestamp = new Date().toISOString();
   const detailsStr = Object.entries(details)
@@ -11,7 +11,7 @@ function log(operation, details = {}) {
     .join(' ');
   const logLine = `${timestamp} ${operation} ${detailsStr}\n`;
   
-  const logPath = path.join(process.cwd(), 'storygen.log');
+  const logPath = path.join(process.cwd(), 'storyshell.log');
   fs.appendFileSync(logPath, logLine);
 }
 
@@ -50,7 +50,7 @@ function parseIncludesFromFrontmatter(frontmatterText) {
 // MAIN 
 
 // Log start of execution
-log('START storygen skill');
+log('START storyshell skill');
 
 // Parse command line arguments
 const args = process.argv.slice(2);
@@ -68,7 +68,7 @@ if (args.length < 1) {
 const templateName = args[0];
 const userPrompt = args.slice(1).join(' ');
 const baseDir = __dirname;
-const storeygenRoot = path.join(baseDir, '../..');  // Go up to storygen root
+const storeygenRoot = path.join(baseDir, '../..');  // Go up to storyshell root
 
 log('run', { 
   template: templateName, 
@@ -191,4 +191,4 @@ console.log(output);
 log('output', { bytes: output.length });
 
 // Log END of execution
-log("END storygen skill\n");
+log("END storyshell skill\n");

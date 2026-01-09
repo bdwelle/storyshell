@@ -1,4 +1,4 @@
-# Storygen 
+# Storyshell 
 A simple story generation/fiction writing assistant CLI built on top of  [https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent](pi-agent). 
 
 ## Requirements
