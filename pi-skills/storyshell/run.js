@@ -165,11 +165,24 @@ function buildConceptIndex(projectDir) {
 function extractConceptTokens(prompt) {
   if (!prompt) return [];
   
+  // Common words to exclude from concept extraction
+  const stopwords = new Set([
+    'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for',
+    'of', 'with', 'by', 'from', 'up', 'about', 'into', 'through', 'during',
+    'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had',
+    'do', 'does', 'did', 'will', 'would', 'could', 'should', 'may', 'might',
+    'can', 'this', 'that', 'these', 'those', 'i', 'you', 'he', 'she', 'it',
+    'we', 'they', 'what', 'which', 'who', 'when', 'where', 'why', 'how',
+    'as', 'if', 'because', 'so', 'than', 'such', 'no', 'not', 'only', 'own',
+    'same', 'so', 'than', 'too', 'very', 'just'
+  ]);
+  
   // Split on whitespace, punctuation, but keep hyphens/underscores
   const tokens = prompt
     .toLowerCase()
     .split(/[\s,.()?!;:"]+/)
-    .filter(t => t.length > 0);
+    .filter(t => t.length > 0)
+    .filter(t => !stopwords.has(t));
   
   return tokens;
 }
