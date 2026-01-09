@@ -75,8 +75,8 @@ else
     echo -e "${GREEN}  ✓ Command installed: $SS_COMMAND_LINK${NC}"
 fi
 
-# NSS command
-CMD_FILE="nss.md"
+# NOSS command
+CMD_FILE="noss.md"
 SS_COMMAND_LINK="$PI_COMMANDS_DIR/$CMD_FILE"
 if [ -L "$SS_COMMAND_LINK" ]; then
     EXISTING_TARGET=$(readlink "$SS_COMMAND_LINK")

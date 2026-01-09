@@ -21,9 +21,11 @@ get_genre_value() {
     case "$1" in
         ACTION) echo "Life/Death" ;;
         HORROR) echo "Life/Death (Fate Worse Than Death)" ;;
-        LOVE) echo "Love/Hate" ;;
+        LOVE) echo "Love/Hate (often includes maturity/immaturity)" ;;
         CRIME) echo "Justice/Injustice" ;;
-        WAR) echo "Honor/Disgrace" ;;
+        PERFORMANCE) echo "Respect/Disrespect OR Success/Failure" ;;
+        WAR) echo "Honor/Disgrace OR Unity/Disunity" ;;
+        WORLDVIEW) echo "Meaning/Meaninglessness OR Truth/Lie" ;;
     esac
 }
 
@@ -32,8 +34,10 @@ get_genre_scenes() {
         ACTION) echo "Hero at Mercy of Villain|Speech in Praise of Villain|All is Lost Moment|Hero Gains Power/Ability|Asymmetrical Force Confrontation" ;;
         HORROR) echo "Introduction of Monster|Hero at Mercy of Monster|Protagonist Realizes Mistakes|False Ending|Final Confrontation" ;;
         LOVE) echo "Meet Cute|Rupture/Break-up|Proof of Love|Declaration|Lovers Reunite" ;;
+        PERFORMANCE) echo "The challenge presented|Training sequence|Mentor appears|Failure/setback|Final performance" ;;
         CRIME) echo "Discovery of Crime|Investigation Begins|Red Herrings|Hero at Mercy of Villain|Revelation of Criminal|Final Confrontation" ;;
         WAR) echo "Rally the Troops|Demonstrate Leadership|All is Lost|Sacrifice for Greater Good|Final Battle" ;;
+        WORLDVIEW) echo "Crisis of faith|Mentor appears|Protagonist questions beliefs|Testing of new philosophy|Resolution of worldview" ;;
     esac
 }
 
@@ -94,7 +98,9 @@ echo "  1) ACTION"
 echo "  2) HORROR"
 echo "  3) LOVE"
 echo "  4) CRIME"
-echo "  5) WAR"
+echo "  5) PERFORMANCE"
+echo "  6) WAR"
+echo "  7) WORLDVIEW"
 GENRE_CHOICE=$(prompt_with_default "Genre" "1")
 
 case $GENRE_CHOICE in
@@ -102,8 +108,10 @@ case $GENRE_CHOICE in
     2) GENRE="HORROR" ;;
     3) GENRE="LOVE" ;;
     4) GENRE="CRIME" ;;
-    5) GENRE="WAR" ;;
-    ACTION|HORROR|LOVE|CRIME|WAR) GENRE="$GENRE_CHOICE" ;;
+    5) GENRE="PERFORMANCE" ;;
+    6) GENRE="WAR" ;;
+    7) GENRE="WORLDVIEW" ;;
+    ACTION|HORROR|LOVE|CRIME|PERFORMANCE|WAR|WORLDVIEW) GENRE="$GENRE_CHOICE" ;;
     *) 
         echo -e "${RED}Invalid choice. Using ACTION.${NC}"
         GENRE="ACTION"
@@ -121,40 +129,15 @@ echo ""
 # 4. Create project structure
 echo -e "${YELLOW}Creating project structure...${NC}"
 mkdir -p "$PROJECT_DIR"
+mkdir -p "$PROJECT_DIR/characters"
+mkdir -p "$PROJECT_DIR/codex"
 mkdir -p "$PROJECT_DIR/prompts"
-mkdir -p "$PROJECT_DIR/output/character"
-mkdir -p "$PROJECT_DIR/output/storyline"
-mkdir -p "$PROJECT_DIR/output/sketch"
-mkdir -p "$PROJECT_DIR/output/scene"
-mkdir -p "$PROJECT_DIR/templates"
-mkdir -p "$PROJECT_DIR/.storyshell"
+mkdir -p "$PROJECT_DIR/prose"
+mkdir -p "$PROJECT_DIR/scenes"
+mkdir -p "$PROJECT_DIR/storylines"
 echo -e "${GREEN}  ✓ Directories created${NC}"
 
-# 5. Copy prompt templates
-echo -e "${YELLOW}Copying prompt templates...${NC}"
-if [ -d "$STORYSHELL_ROOT/prompts" ]; then
-    # Copy all prompts except main.md (we'll generate that)
-    for file in "$STORYSHELL_ROOT/prompts"/*.md; do
-        filename=$(basename "$file")
-        if [ "$filename" != "main.md" ]; then
-            cp "$file" "$PROJECT_DIR/prompts/"
-        fi
-    done
-    echo -e "${GREEN}  ✓ Prompts copied${NC}"
-else
-    echo -e "${RED}  ✗ Warning: prompts directory not found in StoryShell root${NC}"
-fi
-
-# 6. Copy content templates
-echo -e "${YELLOW}Copying content templates...${NC}"
-if [ -d "$STORYSHELL_ROOT/templates" ]; then
-    cp -r "$STORYSHELL_ROOT/templates"/* "$PROJECT_DIR/templates/" 2>/dev/null || true
-    echo -e "${GREEN}  ✓ Templates copied${NC}"
-else
-    echo -e "${RED}  ✗ Warning: templates directory not found in StoryShell root${NC}"
-fi
-
-# 7. Ask about initialization
+# 5. Ask about initialization
 echo ""
 read -p "Initialize project metadata now? (y/n): " INIT_NOW
 
@@ -280,17 +263,13 @@ Global Value: $GLOBAL_VALUE
 
 ## Project Structure
 
+- **codex/** - Library of key concepts
 - **prompts/** - AI generation prompts and story overview
   - **main.md** - Core story metadata and world building (edit this!)
-  - **storygrid.md** - Story structure methodology
-  - **method-writing.md** - Scene writing techniques
-  - **narrative-goals.md** - Specific narrative guidance
-- **output/** - Generated content
-  - **character/** - Character profiles
-  - **storyline/** - Story arcs
-  - **sketch/** - Scene sketches (outlines)
-  - **scene/** - Full prose scenes
-- **templates/** - Content templates
+- **characters/** - Character profiles
+- **storylines/** - Story arcs
+- **scenes/** - Scene sketches (outlines)
+- **prose/** - Full prose scenes
 
 ## Obligatory Scenes ($GENRE)
 
@@ -326,14 +305,13 @@ pi "develop a storyline for my character"
 
 From within this project directory:
 
-- \`project show\` - Display project info
-- \`project init\` - Initialize/re-initialize project metadata
-- \`project update\` - Update project metadata
-- \`character list\` - List all characters
-- \`character new "Name" --role TYPE\` - Create character
-- \`storyline list\` - List storylines
-- \`sketch list\` - List scene sketches
-- \`scene list\` - List scenes
+- "Develop a character named..."
+- "Suggest some scenes about..."
+- "Develop scene #2 (after suggestions)..."
+- "Suggest some storylines about..."
+- "Develop storyline #3" (after suggestions)
+- "Write prose for scenes/skateboarder-robot-cop.md"
+- "Save that to..."
 
 See individual command help: \`<command> --help\`
 EOF
@@ -349,20 +327,13 @@ echo ""
 echo -e "${CYAN}Project: $PROJECT_NAME${NC}"
 echo -e "${CYAN}Location: $PROJECT_DIR${NC}"
 echo ""
-
-if [ "$INIT_NOW" != "y" ] && [ "$INIT_NOW" != "Y" ]; then
-    echo -e "${YELLOW}To initialize project metadata later:${NC}"
-    echo -e "  cd $PROJECT_DIR"
-    echo -e "  project init"
-    echo ""
-fi
-
 echo -e "${YELLOW}Next steps:${NC}"
 echo ""
 echo "  1. cd $PROJECT_DIR"
 echo "  2. Edit prompts/main.md to add world details"
-echo "  3. Use pi-agent or run commands directly:"
+echo "  3. Run pi and try some storyshell commands"
 echo ""
-echo -e "     ${GREEN}pi \"create my protagonist\"${NC}"
-echo -e "     ${GREEN}character new \"Name\" --role protagonist${NC}"
+echo -e "     ${GREEN}pi${NC}"
+echo -e "     ${GREEN}develop a character named Jimmy${NC}"
+echo -e "     ${GREEN}suggest some scenes with Jimmy about...${NC}"
 echo ""

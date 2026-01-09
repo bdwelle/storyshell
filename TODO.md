@@ -4,5 +4,5 @@
 [x] restore concept_extraction
 [x] update concept_extraction to exclude common words like 'the' 'and' etc
 [ ] improve example-project SYSTEM.md
-[ ] revive install.sh
+[x] revive install.sh
 [ ] revive setup-project.sh
