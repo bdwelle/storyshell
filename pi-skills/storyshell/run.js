@@ -3,9 +3,14 @@
 const fs = require('fs');
 const path = require('path');
 
+// PST offset (8 hours behind UTC)
+const PST_OFFSET_MS = -8 * 60 * 60 * 1000;
+
 // Logging function - single-line entries to storyshell.log
 function log(operation, details = {}) {
-  const timestamp = new Date().toISOString();
+  const now = new Date();
+  const pstTime = new Date(now.getTime() + PST_OFFSET_MS);
+  const timestamp = pstTime.toISOString().replace('Z', ' PST');
   const detailsStr = Object.entries(details)
     .map(([k, v]) => `${k}=${v}`)
     .join(' ');
@@ -419,13 +424,16 @@ if (uniqueIncludes.length > 0) {
     }
   }
 }
+log("includes complete");
 
 // Add template body
 output += templateBody;
+log('templateBody added');
 
 // Add user prompt if provided
 if (userPrompt) {
   output += `\n\n## User Request\n\n${userPrompt}\n`;
+  log('user request added', { request: userPrompt });
 }
 
 // Output to stdout
