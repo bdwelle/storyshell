@@ -2,7 +2,7 @@
 type: template
 id: storyline
 includes:
-  - inc/storygrid.md
+  - prompts/storygrid.md
 ---
 
 # Storyline Development Task

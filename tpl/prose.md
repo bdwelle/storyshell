@@ -2,8 +2,8 @@
 type: template
 id: prose
 includes:
-  - inc/storygrid.md
-  - inc/method-writing.md
+  - prompts/storygrid.md
+  - prompts/method-writing.md
 ---
 
 # Prose Generation Task

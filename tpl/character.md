@@ -2,9 +2,9 @@
 type: template
 id: character
 includes:
-  - inc/storygrid.md
-  - inc/method-writing.md
-  - inc/method-characters.md
+  - prompts/storygrid.md
+  - prompts/method-writing.md
+  - prompts/method-characters.md
 ---
 
 # Character Generation Task

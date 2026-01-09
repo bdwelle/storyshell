@@ -1,6 +1,6 @@
 ---
 includes:
-  - inc/method-characters.md
+  - prompts/method-characters.md
 output: (interactive - no file output)
 ---
 

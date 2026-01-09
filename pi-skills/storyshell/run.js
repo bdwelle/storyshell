@@ -46,6 +46,202 @@ function parseIncludesFromFrontmatter(frontmatterText) {
   return includes;
 }
 
+// Parse full frontmatter into object
+function parseFrontmatter(content) {
+  const match = content.match(/^---\n([\s\S]*?)\n---/);
+  if (!match) return {};
+  
+  const frontmatter = {};
+  const lines = match[1].split('\n');
+  let currentKey = null;
+  let currentArray = null;
+  
+  for (const line of lines) {
+    // Array item
+    const arrayMatch = line.match(/^\s*-\s+(.+)$/);
+    if (arrayMatch && currentArray) {
+      currentArray.push(arrayMatch[1].trim());
+      continue;
+    }
+    
+    // Key-value pair
+    const kvMatch = line.match(/^([a-z_]+):\s*(.*)$/i);
+    if (kvMatch) {
+      const [, key, value] = kvMatch;
+      currentKey = key;
+      
+      if (value === '') {
+        // Array starts on next line
+        currentArray = [];
+        frontmatter[key] = currentArray;
+      } else {
+        // Simple value
+        frontmatter[key] = value.trim();
+        currentArray = null;
+      }
+    }
+  }
+  
+  return frontmatter;
+}
+
+// Helper: Scan a directory and add files to the index
+function scanDirectory(dir, index, prefix, options = {}) {
+  if (!fs.existsSync(dir)) {
+    log('scan_directory', { dir: prefix, status: 'not_found' });
+    return 0;
+  }
+  
+  let files = fs.readdirSync(dir).filter(f => f.endsWith('.md'));
+  
+  // Exclude main.md from inc/ directory
+  if (options.excludeMain) {
+    files = files.filter(f => f !== 'main.md');
+  }
+  
+  for (const file of files) {
+    const filePath = path.join(dir, file);
+    const basename = file.replace(/\.md$/, '');
+    const relPath = `${prefix}/${file}`;
+    
+    // Add filename as primary key
+    index[basename] = relPath;
+    
+    // Parse frontmatter for aliases and name field
+    try {
+      const content = fs.readFileSync(filePath, 'utf8');
+      const frontmatter = parseFrontmatter(content);
+      
+      // Add aliases
+      if (frontmatter.aliases && Array.isArray(frontmatter.aliases)) {
+        for (const alias of frontmatter.aliases) {
+          index[alias.toLowerCase()] = relPath;
+        }
+      }
+      
+      // Add 'name' field for characters (normalized: "Maya Chen" -> "maya-chen")
+      if (frontmatter.name) {
+        const nameLower = frontmatter.name.toLowerCase().replace(/\s+/g, '-');
+        index[nameLower] = relPath;
+      }
+    } catch (err) {
+      warn(`Error parsing ${file}: ${err.message}`);
+    }
+  }
+  
+  log('scan_directory', { dir: prefix, status: 'ok', files: files.length });
+  return files.length;
+}
+
+// Build unified entity index from codex/ and characters/ directories
+function buildConceptIndex(projectDir) {
+  const index = {}; // { "steg": "codex/steg.md", "maya": "characters/maya-chen.md", ... }
+  
+  // Scan codex/ for concepts
+  const conceptCount = scanDirectory(
+    path.join(projectDir, 'codex'), 
+    index, 
+    'codex'
+  );
+  
+  // Scan characters/ for character files
+  const characterCount = scanDirectory(
+    path.join(projectDir, 'characters'), 
+    index, 
+    'characters'
+  );
+  
+  log('entity_index', { 
+    status: 'built',
+    concepts: conceptCount,
+    characters: characterCount,
+    total_entries: Object.keys(index).length 
+  });
+  
+  return index;
+}
+
+// Extract concept tokens from user prompt
+function extractConceptTokens(prompt) {
+  if (!prompt) return [];
+  
+  // Split on whitespace, punctuation, but keep hyphens/underscores
+  const tokens = prompt
+    .toLowerCase()
+    .split(/[\s,.()?!;:"]+/)
+    .filter(t => t.length > 0);
+  
+  return tokens;
+}
+
+// Find concept files matching user prompt
+function findConceptFiles(prompt, conceptIndex) {
+  const tokens = extractConceptTokens(prompt);
+  const matchedFiles = new Set();
+  
+  log('concept_extraction', { 
+    tokens: JSON.stringify(tokens),
+    source: 'user_prompt'
+  });
+  
+  for (const token of tokens) {
+    if (conceptIndex[token]) {
+      matchedFiles.add(conceptIndex[token]);
+    }
+  }
+  
+  if (matchedFiles.size > 0) {
+    log('concept_matching', { 
+      matches: JSON.stringify(Array.from(matchedFiles)),
+      status: 'ok'
+    });
+  }
+  
+  return Array.from(matchedFiles);
+}
+
+// Load related entities (concepts + characters) from a file's frontmatter
+function loadRelatedConcepts(conceptFile, conceptIndex, projectDir) {
+  const relatedFiles = [];
+  const filePath = path.join(projectDir, conceptFile);
+  
+  if (!fs.existsSync(filePath)) return relatedFiles;
+  
+  try {
+    const content = fs.readFileSync(filePath, 'utf8');
+    const frontmatter = parseFrontmatter(content);
+    
+    // Load related_concepts
+    if (frontmatter.related_concepts && Array.isArray(frontmatter.related_concepts)) {
+      for (const concept of frontmatter.related_concepts) {
+        if (conceptIndex[concept]) {
+          relatedFiles.push(conceptIndex[concept]);
+        }
+      }
+    }
+    
+    // Load related_characters
+    if (frontmatter.related_characters && Array.isArray(frontmatter.related_characters)) {
+      for (const character of frontmatter.related_characters) {
+        if (conceptIndex[character]) {
+          relatedFiles.push(conceptIndex[character]);
+        }
+      }
+    }
+    
+    if (relatedFiles.length > 0) {
+      log('related_entities', {
+        from: conceptFile,
+        loaded: JSON.stringify(relatedFiles)
+      });
+    }
+  } catch (err) {
+    warn(`Error loading related entities from ${conceptFile}: ${err.message}`);
+  }
+  
+  return relatedFiles;
+}
+
 ////////////////////////////////
 // MAIN 
 
@@ -76,7 +272,7 @@ log('run', {
 });
 
 ////////////////
-// TEMPLATE
+// TEMPLATES
 
 // Read template file from root tpl/ directory
 const templatePath = path.join(storeygenRoot, 'tpl', `${templateName}.md`);
@@ -107,15 +303,15 @@ const [, frontmatterText, templateBody] = match;
 // INCLUDES (context)
 
 // Auto-include project context first (from current working directory)
-const projectMainPath = path.join(process.cwd(), 'inc/main.md');
+const projectMainPath = path.join(process.cwd(), 'prompts/main.md');
 const includes = [];
 
 // Check if project main.md exists - REQUIRED
 if (!fs.existsSync(projectMainPath)) {
   console.error(`Error: Project context not found: ${projectMainPath}`);
   console.error('');
-  console.error('You must have inc/main.md in your project directory.');
-  console.error('Run from your project directory with an inc/main.md file.');
+  console.error('You must have prompts/main.md in your project directory.');
+  console.error('Run from your project directory with a prompts/main.md file.');
   log('error', { type: 'project_context_required', path: projectMainPath });
   process.exit(1);
 }
@@ -132,21 +328,54 @@ if (projectMainMatch) {
 }
 
 // Then add project main.md itself
-includes.push('inc/main.md');
+includes.push('prompts/main.md');
+
+// Build entity index (concepts + characters) and find matching files from user prompt
+const conceptIndex = buildConceptIndex(process.cwd());
+const conceptFiles = findConceptFiles(userPrompt, conceptIndex);
+
+// Load related concepts from matched concept files
+const relatedConceptFiles = [];
+for (const conceptFile of conceptFiles) {
+  const related = loadRelatedConcepts(conceptFile, conceptIndex, process.cwd());
+  relatedConceptFiles.push(...related);
+}
+
+// Combine concept files + related, deduplicate
+const allConceptFiles = [...new Set([...conceptFiles, ...relatedConceptFiles])];
+
+// Insert concept files after project main, before template includes
+includes.push(...allConceptFiles);
 
 // Parse additional includes from template frontmatter
 const templateIncludes = parseIncludesFromFrontmatter(frontmatterText);
 includes.push(...templateIncludes);
 
+// Final deduplication - preserve order, remove duplicates
+const uniqueIncludes = [];
+const seen = new Set();
+for (const inc of includes) {
+  if (!seen.has(inc)) {
+    uniqueIncludes.push(inc);
+    seen.add(inc);
+  }
+}
+
+log('includes_final', {
+  total: uniqueIncludes.length,
+  files: JSON.stringify(uniqueIncludes)
+});
+
 // Process includes with multi-path resolution
 let output = '';
 
-if (includes.length > 0) {
-  for (const inc of includes) {
+if (uniqueIncludes.length > 0) {
+  for (const inc of uniqueIncludes) {
     let resolved = false;
     const searchPaths = [
       path.join(process.cwd(), inc),              // 1. Relative to current directory (PROJECT)
-      path.isAbsolute(inc) ? inc : null           // 2. Absolute path
+      path.join(storeygenRoot, inc),              // 2. Relative to storyshell root (FRAMEWORK)
+      path.isAbsolute(inc) ? inc : null           // 3. Absolute path
     ].filter(p => p !== null);
 
     for (const incPath of searchPaths) {
@@ -191,4 +420,4 @@ console.log(output);
 log('output', { bytes: output.length });
 
 // Log END of execution
-log("END storyshell skill\n");
+log("END storyshell skill\n======================================================================\n");

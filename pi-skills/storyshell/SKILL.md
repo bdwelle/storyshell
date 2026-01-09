@@ -11,9 +11,77 @@ Story generation system using templates with embedded instructions for fiction w
 
 When the user requests story generation:
 1. Run the appropriate template using `run.js`
-2. The script outputs a complete prompt (includes + template + user request) to stdout
-3. Take that output and send it to the LLM to generate the content
-4. Save the generated content if the user requests it
+2. The script automatically loads relevant context:
+   - Project context from `prompts/main.md`
+   - **Concept-specific knowledge** from user's prompt (see Entity Matching below)
+   - **Character definitions** from user's prompt (see Entity Matching below)
+   - Template-specific includes (methodology, etc.)
+3. The script outputs a complete prompt (includes + template + user request) to stdout
+4. Take that output and send it to the LLM to generate the content
+5. Save the generated content if the user requests it
+
+### Automatic Entity Matching (Concepts + Characters)
+
+The system automatically detects and loads context files based on words in the user's prompt:
+- **Concepts** from `codex/` directory (technology, world-building, themes)
+- **Characters** from `characters/` directory (character definitions, relationships)
+
+**How it works:**
+- User mentions "shipchain" → system loads `codex/shipchain.md`
+- User mentions "Maya" → system loads `characters/maya-chen.md`
+- User mentions "Celeste" → system loads `characters/celeste-voss.md` + related characters
+- User mentions "executable-contracts" → system loads `codex/steg.md` (via alias)
+
+**Features:**
+- **Alias matching:** Both concepts and characters can have multiple aliases
+- **Related entities:** Automatically loads `related_concepts` and `related_characters`
+- **Deduplication:** Same file never loaded twice
+- **Logged:** All matches logged to `storyshell.log`
+
+**Examples:**
+
+*Characters only:*
+```bash
+{baseDir}/run.js scene "Celeste oversees Maya stretching session"
+```
+→ Loads `characters/celeste-voss.md` + `characters/maya-chen.md`
+
+*Mix of characters and concepts:*
+```bash
+{baseDir}/run.js scene "Maya signs an execon while wearing a shipchain"
+```
+→ Loads `characters/maya-chen.md` + `codex/steg.md` + `codex/shipchain.md` + related concepts
+
+**Entity File Format:**
+
+*Concept file (codex/):*
+```yaml
+---
+title: "Concept Name"
+type: technology
+aliases:
+  - alternative-name
+  - another-name
+related_concepts:
+  - other-concept
+---
+# Concept content...
+```
+
+*Character file (characters/):*
+```yaml
+---
+type: character
+name: Maya Chen
+aliases:
+  - maya
+related_characters:
+  - celeste
+related_concepts:
+  - gymnast
+---
+# Character content...
+```
 
 ## Available Templates
 
@@ -207,8 +275,12 @@ You:
 
 ## Notes
 
-- **Project Context Required:** `run.js` requires `inc/main.md` in the current working directory. This file contains project-specific context (characters, world, tone, etc.). Processing will fail with an error if not found.
+- **Project Context Required:** `run.js` requires `prompts/main.md` in the current working directory. This file contains project-specific context (world, tone, etc.). Processing will fail with an error if not found.
+- **Concept Files:** Place domain-specific concept files in your project's `codex/` directory with frontmatter including `aliases` and `related_concepts` for automatic loading
+- **Character Files:** Place character definitions in your project's `characters/` directory with frontmatter including `aliases`, `related_characters`, and `related_concepts`
+- **Entity Matching:** Single words from user prompts are matched against entity filenames and aliases (case-insensitive, exact match)
+- **Relationship Loading:** When a character/concept is matched, its `related_characters` and `related_concepts` are automatically loaded
 - Templates also include story methodology files (Storygrid, Method Writing, etc.) from their frontmatter
-- The `run.js` script logs all operations to `storyshell.log` in the current directory
-- Missing include files (other than inc/main.md) generate warnings but don't stop processing
+- The `run.js` script logs all operations to `storyshell.log` in the current directory, including entity matching details
+- Missing include files (other than prompts/main.md) generate warnings but don't stop processing
 - User must be in their project directory when running commands

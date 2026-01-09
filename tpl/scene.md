@@ -2,8 +2,8 @@
 type: template
 id: scene
 includes:
-  - inc/storygrid.md
-  - inc/method-writing.md
+  - prompts/storygrid.md
+  - prompts/method-writing.md
 ---
 
 # Scene Generation Task
