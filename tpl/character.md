@@ -3,7 +3,6 @@ type: template
 id: character
 includes:
   - prompts/storygrid.md
-  - prompts/method-writing.md
   - prompts/method-characters.md
 ---
 

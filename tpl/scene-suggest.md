@@ -1,4 +1,6 @@
 ---
+type: template
+id: scene-suggest
 includes:
   - prompts/storygrid.md
 output: (stdout - no file output)

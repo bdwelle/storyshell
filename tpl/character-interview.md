@@ -1,4 +1,6 @@
 ---
+type: template
+id: character-interview
 includes:
   - prompts/method-characters.md
 output: (interactive - no file output)
