@@ -166,6 +166,23 @@ function buildConceptIndex(projectDir) {
   return index;
 }
 
+// Extract explicit filepaths from prompt (e.g., "scenes/marchetti-first-binding.md")
+function extractExplicitPaths(prompt) {
+  if (!prompt) return [];
+  
+  // Match paths like: path/to/file.md, path/file.md, file.md
+  const pathPattern = /[\w\-./]+\.md/g;
+  const matches = prompt.match(pathPattern) || [];
+  
+  return matches;
+}
+
+// Get the primary prompt for entity extraction
+// Prefers original user command (from PI_USER_COMMAND env var) over agent interpretation
+function getPrimaryPrompt() {
+  return originalUserCommand || userPrompt;
+}
+
 // Extract concept tokens from user prompt
 function extractConceptTokens(prompt) {
   if (!prompt) return [];
@@ -281,12 +298,18 @@ if (args.length < 1) {
 
 const templateName = args[0];
 const userPrompt = args.slice(1).join(' ');
+
+// Check for original user command in environment variable
+// This is set by the skill invocation to preserve the exact user input
+const originalUserCommand = process.env.PI_USER_COMMAND || userPrompt;
+
 const baseDir = __dirname;
 const storeygenRoot = path.join(baseDir, '../..');  // Go up to storyshell root
 
 log('run', { 
   template: templateName, 
-  user_prompt: userPrompt ? `"${userPrompt}"` : 'none'
+  user_prompt: userPrompt ? `"${userPrompt}"` : 'none',
+  original_user_command: originalUserCommand ? `"${originalUserCommand}"` : 'none'
 });
 
 ////////////////
@@ -348,9 +371,23 @@ if (projectMainMatch) {
 // Then add project main.md itself
 includes.push('prompts/main.md');
 
-// Build entity index (concepts + characters) and find matching files from user prompt
+// Get the primary prompt (original user command if available, else agent interpretation)
+const primaryPrompt = getPrimaryPrompt();
+log('original user prompt', { primaryPrompt: primaryPrompt });
+
+// Extract explicit filepaths from primary prompt
+const explicitPaths = extractExplicitPaths(primaryPrompt);
+if (explicitPaths.length > 0) {
+  log('explicit_paths', { 
+    count: explicitPaths.length,
+    paths: JSON.stringify(explicitPaths)
+  });
+  includes.push(...explicitPaths);
+}
+
+// Build entity index (concepts + characters) and find matching files from primary prompt
 const conceptIndex = buildConceptIndex(process.cwd());
-const conceptFiles = findConceptFiles(userPrompt, conceptIndex);
+const conceptFiles = findConceptFiles(primaryPrompt, conceptIndex);
 
 // Load related concepts from matched concept files
 const relatedConceptFiles = [];
@@ -362,7 +399,7 @@ for (const conceptFile of conceptFiles) {
 // Combine concept files + related, deduplicate
 const allConceptFiles = [...new Set([...conceptFiles, ...relatedConceptFiles])];
 
-// Insert concept files after project main, before template includes
+// Insert concept files after explicit paths, before template includes
 includes.push(...allConceptFiles);
 
 // Parse additional includes from template frontmatter
@@ -432,8 +469,10 @@ log('templateBody added');
 
 // Add user prompt if provided
 if (userPrompt) {
-  output += `\n\n## User Request\n\n${userPrompt}\n`;
-  log('user request added', { request: userPrompt });
+  output += `\n\n## Primary User Request`
+  output += `\n\nIMPORTANT: follow the following primary instructions precisely, using everything above as context:\n`;
+  output += primaryPrompt;
+  log('original user prompt added');
 }
 
 // Output to stdout
