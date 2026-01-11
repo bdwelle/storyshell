@@ -1,4 +1,4 @@
----
+LLM_USER_COMMAND---
 name: storyshell
 description: Simple story generation assistant for fiction writing. Use for creating fictional characters, scenes, storylines, and prose.
 ---
@@ -90,6 +90,8 @@ related_concepts:
 
 ## Available Templates
 
+These templates are stored in ~/lib/storyshell/tpl
+
 - `character-interview` - Generate interview questions for character development (interactive)
 - `character` - Create a character profile (use after interview conversation)
 - `scene-suggest` - Brainstorm 3-5 scene concepts (quick exploration)
@@ -104,18 +106,18 @@ The storyshell skill is invoked via the bash tool with environment variables to 
 
 **Invocation pattern:**
 ```bash
-PI_USER_COMMAND="<original-user-message>" bash -c '{baseDir}/run.js <template-name> "<agent-interpretation>"'
+LLM_USER_COMMAND="<original-user-message>" bash -c '{baseDir}/run.js <template-name> "<agent-interpretation>"'
 ```
 
 **Key points:**
-- Set `PI_USER_COMMAND` env var to the **original user message exactly as they typed it** - this ensures run.js has access to the actual prompt with all formatting and context
+- Set `LLM_USER_COMMAND` env var to the **original user message exactly as they typed it** - this ensures run.js has access to the actual prompt with all formatting and context
 - `<template-name>` is one of: `character-interview`, `character`, `scene-suggest`, `scene`, `storyline-suggest`, `storyline`, `prose`
 - `<agent-interpretation>` is your (the agent's) interpretation/processing of the user request
 - The script automatically extracts filenames, concept tokens, and character names from both sources
 - All relevant context is loaded and included in the output
 
 **Why both?**
-- `PI_USER_COMMAND` preserves the original, unmodified user input
+- `LLM_USER_COMMAND` preserves the original, unmodified user input
 - The second argument captures any processing/clarifications the agent has done
 - run.js uses the env var as the primary source for entity extraction
 
@@ -123,12 +125,12 @@ PI_USER_COMMAND="<original-user-message>" bash -c '{baseDir}/run.js <template-na
 
 Simple request:
 ```bash
-PI_USER_COMMAND="write prose for scenes/gallery-opening.md" bash -c '/path/to/run.js prose "scenes/gallery-opening.md"'
+LLM_USER_COMMAND="write prose for scenes/gallery-opening.md" bash -c '/path/to/run.js prose "scenes/gallery-opening.md"'
 ```
 
 Complex multi-line request:
 ```bash
-PI_USER_COMMAND="develop a scene with the Twins about their first binding together. 
+LLM_USER_COMMAND="develop a scene with the Twins about their first binding together. 
 Beats:
 1) they are led into the binding chamber
 2) they are bound together..." bash -c '/path/to/run.js scene "develop a detailed scene with the Twins first binding"'
