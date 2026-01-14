@@ -2,6 +2,26 @@ const fs = require('fs');
 const path = require('path');
 const https = require('https');
 
+// --- Logging Setup for Core Script ---
+const coreLogFilePath = '/Users/bdwelle/lib/storyshell/elevenlabs-tts.log';
+const coreLogStream = fs.createWriteStream(coreLogFilePath, { flags: 'a' });
+const CORE_SCRIPT_NAME = 'elevenlabs-tts-core.js';
+
+const originalCoreConsoleLog = console.log;
+const originalCoreConsoleError = console.error;
+
+console.log = (...args) => {
+    coreLogStream.write(`[${new Date().toISOString()}] ${CORE_SCRIPT_NAME} LOG: ${args.join(' ')}\n`);
+    // originalCoreConsoleLog.apply(console, args); // Option to also print to original console
+};
+
+console.error = (...args) => {
+    coreLogStream.write(`[${new Date().toISOString()}] ${CORE_SCRIPT_NAME} ERROR: ${args.join(' ')}\n`);
+    // originalCoreConsoleError.apply(console, args); // Option to also print to original console
+};
+// --- End Logging Setup ---
+
+
 // --- Configuration ---
 const API_HOST = 'api.elevenlabs.io';
 const API_PATH_PREFIX = '/v1/text-to-speech';
@@ -14,11 +34,11 @@ function logError(message) {
 }
 
 function logInfo(message) {
-    // For now, only output critical info to stdout, errors to stderr
-    // console.log(`INFO: ${message}`);
+    console.log(`INFO: ${message}`); // Now logs to core log file
 }
 
 function generateSpeech(text, voiceId, apiKey, outputDir) {
+    console.log('generateSpeech() - Entry');
     if (!text) {
         logError('Text to convert to speech is required.');
     }
@@ -46,6 +66,7 @@ function generateSpeech(text, voiceId, apiKey, outputDir) {
         }
     };
 
+    console.log('generateSpeech() - Making HTTPS request');
     return new Promise((resolve, reject) => {
         const tempFileName = `elevenlabs-tts-${Date.now()}.mp3`;
         const tempFilePath = path.join(outputDir, tempFileName);
@@ -88,9 +109,10 @@ function generateSpeech(text, voiceId, apiKey, outputDir) {
 
 // --- Command Line Argument Parsing ---
 async function run() {
+    console.log('run() - Entry');
     const args = process.argv.slice(2);
     let text = '';
-    let voiceId = 'FGY2WhTYpPnrIDTdsKH5'; // default to 'Laura'
+    let voiceId = ''; 
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
     if (!apiKey) {
@@ -111,21 +133,30 @@ async function run() {
             }
         } // Closing brace for the for loop
 
+        console.log('run() - Parsed text:', text);
+        console.log('run() - Parsed voiceId:', voiceId);
+        console.log('run() - API Key status:', apiKey ? 'Set' : 'Not Set');
+        
         if (!text) {
             logError('Missing required argument: --text');
         }
 
         const projectRootDir = process.env.STORYSHELL_PROJECT_ROOT_DIR || process.cwd();
-        const outputDir = path.join(projectRootDir, 'voice');
+        const outputDir = path.join(projectRootDir, 'voice'); // Changed to 'voice' directory
+        console.log('run() - Output directory:', outputDir);
 
         // Ensure output directory exists
         if (!fs.existsSync(outputDir)) {
+            console.log('run() - Creating output directory:', outputDir);
             fs.mkdirSync(outputDir, { recursive: true });
         }
 
         try {
+            console.log('run() - Calling generateSpeech...');
             const audioFilePath = await generateSpeech(text, voiceId, apiKey, outputDir);
-            console.log(audioFilePath); // Output the path to stdout for opencode to capture
+            console.log(`Audio file generated: ${audioFilePath}`); 
+			// Output the path to stdout for opencode to capture
+			
         } catch (e) {
             logError(`Failed to generate speech: ${e.message}`);
         }
