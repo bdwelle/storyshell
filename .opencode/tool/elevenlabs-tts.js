@@ -162,8 +162,8 @@ module.exports = tool({
 
     // Set default voiceId if not provided
     console.log('args.voiceId:', args.voiceId);
-    const VALID_VOICE_IDS = ["Xb7hH8MSUJpSbSDYk0k2", "FGY2WhTYpPnrIDTdsKH5", "EXAVITQu4vr4xnSDxMaL"];
-    const DEFAULT_VOICE_ID = 'FGY2WhTYpPnrIDTdsKH5'; // Default to 'Laura'
+    const VALID_VOICE_IDS = ["Xb7hH8MSUJpSbSDYk0k2", "FGY2WhTYpPnrIDTdsKH5", "EXAVITQu4vr4xnSDxMaL", "XrExE9yKIg1WjnnlVkGX", "cgSgspJ2msm6clMCkdW9", "pFZP5JQG7iQjIQuC4Bku", "uIZsnBL0YK1S5j69bAih"];
+    const DEFAULT_VOICE_ID = "uIZsnBL0YK1S5j69bAih"; // Default to 'Samantha'
 
     if (!args.voiceId || !VALID_VOICE_IDS.includes(args.voiceId)) {
         console.log(`Voice ID '${args.voiceId}' is invalid or not provided, defaulting to:`, DEFAULT_VOICE_ID);
