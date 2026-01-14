@@ -3,7 +3,7 @@ type: template
 id: prose
 includes:
   - prompts/method-writing.md
-  - prompts/method-prose.md
+  - prompts/tonal-dynamics.md
 ---
 
 # Prose Generation Task
