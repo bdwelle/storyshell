@@ -2,9 +2,53 @@
 
 const fs = require('fs');
 const path = require('path');
-
 // PST offset (8 hours behind UTC)
 const PST_OFFSET_MS = -8 * 60 * 60 * 1000;
+
+// Setup directory paths - must be before log function
+const baseDir = process.env.SKILL_DIR || process.cwd();
+const skillRoot = path.join(baseDir, '../..');  // Go up to storyshell root
+const projectDir = process.env.PROJECT_DIR || process.cwd();
+const projectMainPath = path.join(projectDir, 'prompts/main.md');
+
+// Log start of execution
+log('START storyshell (js-big-skill)');
+
+// Log directory constants for debugging
+log('directory_constants', {
+  baseDir: baseDir,
+  skillRoot: skillRoot,
+  projectDir: projectDir,
+  projectMainPath: projectMainPath,
+  cwd: process.cwd(),
+  scriptPath: __filename
+});
+
+// Parse command line arguments
+const args = process.argv.slice(2);
+
+// Log the original command line arguments
+log('argv', { 
+  args: JSON.stringify(process.argv.slice(2))
+});
+
+if (args.length < 1) {
+  console.error('Usage: run.js <template-name> [user-prompt]');
+  process.exit(1);
+}
+
+// these args are set by the **invocation pattern** in SKIL.md
+const templateName = args[0];
+const agentInterpretation = args.slice(1).join(' ');
+
+// Get the primary prompt (original user command if available, else agent interpretation)
+const primaryPrompt = process.env.LLM_USER_COMMAND || agentInterpretation;
+
+log('run', { 
+  template: templateName, 
+  agentInterpretation: agentInterpretation,
+  primaryPrompt: primaryPrompt
+});
 
 // Logging function - single-line entries to storyshell.log
 function log(operation, details = {}) {
@@ -15,8 +59,7 @@ function log(operation, details = {}) {
     .map(([k, v]) => `${k}=${v}`)
     .join(' ');
   const logLine = `${timestamp} ${operation} ${detailsStr}\n`;
-  
-  const logPath = path.join(process.cwd(), 'storyshell.log');
+  const logPath = path.join(projectDir, 'storyshell.log');
   fs.appendFileSync(logPath, logLine);
 }
 
@@ -280,43 +323,11 @@ function loadRelatedConcepts(conceptFile, conceptIndex, projectDir) {
 ////////////////////////////////
 // MAIN 
 
-// Log start of execution
-log('START storyshell skill');
-
-// Parse command line arguments
-const args = process.argv.slice(2);
-
-// Log the original command line arguments
-log('argv', { 
-  args: JSON.stringify(process.argv.slice(2))
-});
-
-if (args.length < 1) {
-  console.error('Usage: run.js <template-name> [user-prompt]');
-  process.exit(1);
-}
-
-const templateName = args[0];
-const userPrompt = args.slice(1).join(' ');
-
-// Check for original user command in environment variable
-// This is set by the skill invocation to preserve the exact user input
-const originalUserCommand = process.env.PI_USER_COMMAND || userPrompt;
-
-const baseDir = __dirname;
-const storeygenRoot = path.join(baseDir, '../..');  // Go up to storyshell root
-
-log('run', { 
-  template: templateName, 
-  user_prompt: userPrompt ? `"${userPrompt}"` : 'none',
-  original_user_command: originalUserCommand ? `"${originalUserCommand}"` : 'none'
-});
-
 ////////////////
 // TEMPLATES
 
 // Read template file from root tpl/ directory
-const templatePath = path.join(storeygenRoot, 'tpl', `${templateName}.md`);
+const templatePath = path.join(skillRoot, 'tpl', `${templateName}.md`);
 if (!fs.existsSync(templatePath)) {
   warn(`Template not found: ${templatePath}`);
   log('error', { type: 'template_not_found', path: templatePath });
@@ -343,8 +354,7 @@ const [, frontmatterText, templateBody] = match;
 ////////////////
 // INCLUDES (context)
 
-// Auto-include project context first (from current working directory)
-const projectMainPath = path.join(process.cwd(), 'prompts/main.md');
+// Auto-include project context first (from PROJECT_DIR env var or current working directory)
 const includes = [];
 
 // Check if project main.md exists - REQUIRED
@@ -371,10 +381,6 @@ if (projectMainMatch) {
 // Then add project main.md itself
 includes.push('prompts/main.md');
 
-// Get the primary prompt (original user command if available, else agent interpretation)
-const primaryPrompt = getPrimaryPrompt();
-log('original user prompt', { primaryPrompt: primaryPrompt });
-
 // Extract explicit filepaths from primary prompt
 const explicitPaths = extractExplicitPaths(primaryPrompt);
 if (explicitPaths.length > 0) {
@@ -386,13 +392,13 @@ if (explicitPaths.length > 0) {
 }
 
 // Build entity index (concepts + characters) and find matching files from primary prompt
-const conceptIndex = buildConceptIndex(process.cwd());
+const conceptIndex = buildConceptIndex(projectDir);
 const conceptFiles = findConceptFiles(primaryPrompt, conceptIndex);
 
 // Load related concepts from matched concept files
 const relatedConceptFiles = [];
 for (const conceptFile of conceptFiles) {
-  const related = loadRelatedConcepts(conceptFile, conceptIndex, process.cwd());
+  const related = loadRelatedConcepts(conceptFile, conceptIndex, projectDir);
   relatedConceptFiles.push(...related);
 }
 
@@ -428,8 +434,8 @@ if (uniqueIncludes.length > 0) {
   for (const inc of uniqueIncludes) {
     let resolved = false;
     const searchPaths = [
-      path.join(process.cwd(), inc),              // 1. Relative to current directory (PROJECT)
-      path.join(storeygenRoot, inc),              // 2. Relative to storyshell root (FRAMEWORK)
+      path.join(projectDir, inc),                 // 1. Relative to project directory (PROJECT)
+      path.join(skillRoot, inc),            // 2. Relative to storyshell root (FRAMEWORK)
       path.isAbsolute(inc) ? inc : null           // 3. Absolute path
     ].filter(p => p !== null);
 
@@ -468,11 +474,11 @@ output += templateBody;
 log('templateBody added');
 
 // Add user prompt if provided
-if (userPrompt) {
+if (primaryPrompt) {
   output += `\n\n## Primary User Request`
   output += `\n\nIMPORTANT: follow the following primary instructions precisely, using everything above as context:\n`;
   output += primaryPrompt;
-  log('original user prompt added');
+  log('primaryPrompt added');
 }
 
 // Output to stdout
@@ -480,4 +486,4 @@ console.log(output);
 log('output', { bytes: output.length });
 
 // Log END of execution
-log("END storyshell skill\n======================================================================\n");
+log("END storyshell (js-big-skill)\n======================================================================\n");
