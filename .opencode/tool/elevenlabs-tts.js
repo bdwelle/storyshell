@@ -142,6 +142,18 @@ module.exports = tool({
 
     // --- arguments ---
     console.log('args.text:', args.text);
+
+    // If args.text looks like a file path, load the file content
+    if (args.text && args.text.includes('/')) {
+        const potentialPath = path.join(projectRootDir, args.text);
+        console.log('Checking for file at:', potentialPath);
+        if (fs.existsSync(potentialPath)) {
+            console.log('Loading text from file:', potentialPath);
+            args.text = fs.readFileSync(potentialPath, 'utf8');
+            console.log('Loaded text length:', args.text.length);
+        }
+    }
+
     if (!args.text || args.text.trim() === '') {
         console.error('ERROR: Text argument is empty or missing.');
         throw new Error('Text argument is empty or missing for elevenlabs_tts tool.');
@@ -166,6 +178,7 @@ module.exports = tool({
         const audioFilePath = await generateSpeech(args.text, args.voiceId, apiKey); 
         console.log(`Audio file generated: ${audioFilePath}`);
         console.log('execute() complete.'); 
+        console.log(''); 
         return audioFilePath; // Return the path
     } catch (e) {
         console.error(`Failed to generate speech: ${e.message}`);
