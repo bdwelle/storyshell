@@ -203,6 +203,6 @@ You:
 - **Entity Matching:** Single words from user prompts are matched against entity filenames and aliases (case-insensitive, exact match)
 - **Relationship Loading:** When a character/concept is matched, its `related_characters` and `related_concepts` are automatically loaded
 - Templates also include story methodology files (Storygrid, Method Writing, etc.) from their frontmatter
-- The `run.js` script logs all operations to `storyshell.log` in the current directory, including entity matching details
+- The `run.js` script logs all operations to `log/storyshell.log` in the current directory, including entity matching details
 - Missing include files (other than prompts/main.md) generate warnings but don't stop processing
 - User must be in their project directory when running commands
