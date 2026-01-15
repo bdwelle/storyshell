@@ -78,13 +78,42 @@ else
 fi
 
 #############################
+# 3. Install Storyshell agent symlink
+echo -e "${YELLOW}Installing Storyshell agent...${NC}"
+
+OPENCODE_AGENT_DIR="$HOME/.opencode/agent"
+mkdir -p "$OPENCODE_AGENT_DIR"
+
+AGENT_FILE="storyshell-writer.md"
+AGENT_LINK="$OPENCODE_AGENT_DIR/$AGENT_FILE"
+if [ -L "$AGENT_LINK" ]; then
+    EXISTING_TARGET=$(readlink "$AGENT_LINK")
+    if [ "$EXISTING_TARGET" = "$STORYSHELL_ROOT/agents/$AGENT_FILE" ]; then
+        echo -e "${GREEN}  ✓ Storyshell agent already installed${NC}"
+    else
+        echo -e "${YELLOW}  Updating Storyshell agent symlink...${NC}"
+        rm "$AGENT_LINK"
+        ln -s "$STORYSHELL_ROOT/agents/$AGENT_FILE" "$AGENT_LINK"
+        echo -e "${GREEN}  ✓ Storyshell agent symlink updated${NC}"
+    fi
+elif [ -e "$AGENT_LINK" ]; then
+    echo -e "${RED}  ✗ Error: $AGENT_LINK exists but is not a symlink${NC}"
+    echo -e "${RED}    Please remove it manually and run install.sh again${NC}"
+    exit 1
+else
+    ln -s "$STORYSHELL_ROOT/agents/$AGENT_FILE" "$AGENT_LINK"
+    echo -e "${GREEN}  ✓ Storyshell agent installed: $AGENT_LINK${NC}"
+fi
+
+
+#############################
 # 3. Install TTS agent symlink
 echo -e "${YELLOW}Installing TTS agent...${NC}"
 
 OPENCODE_AGENT_DIR="$HOME/.opencode/agent"
 mkdir -p "$OPENCODE_AGENT_DIR"
 
-AGENT_FILE="tts-agent.md"
+AGENT_FILE="elevenlabs-tts.md"
 AGENT_LINK="$OPENCODE_AGENT_DIR/$AGENT_FILE"
 if [ -L "$AGENT_LINK" ]; then
     EXISTING_TARGET=$(readlink "$AGENT_LINK")
