@@ -12,7 +12,13 @@
 [x] move TTS agent from config to agents dir
 [x] fix naming of tts agent & tool 
 [x] rename run.js to storyshell.js
+[x] fix bash quoting using HEREDOC / EOF
+[x] move add templateBody to end of context built by storyshell.js 
+[x] integrate TTS subagent with primary Storyshell agent
+[x] Add a second Writer agent defined in MD that uses Gemini
 [ ] set permissions to * allow so that the writer agent doesn't stop to ask for permission to access a directory
+[ ] Add Gemini jailbreak – necessary? https://www.injectprompt.com/p/gemini-25-flash-jailbreak-aleph-null
+[ ] try Gemini TTS (vs Elevenlabs)
 
 [ ] improve example-project AGENTS.md
 [ ] revive setup-project.sh

@@ -6,20 +6,21 @@ description: Simple story generation assistant for fiction writing. Use for crea
 ## How to use me 
 
 - Use this skill for creating fictional characters, scenes, storylines, pov, and prose.
-- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing, punch up: 
+- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing, or punch up: 
 
 1. Invoke the appropriate template with this **invocation pattern**
 
 ```bash
-cd <SKILL_DIR> && PROJECT_DIR="{cwd}" bash -c 'node storyshell.js <template-name>' <<< "$(cat <<EOF
+cd <SKILL_DIR> && PROJECT_DIR="{cwd}" bash -c 'node storyshell.js <template-name>' <<EOF
 <original-user-message>
 EOF
-)"
 ```
 
 2. The script outputs a complete prompt (includes + template + user request) to stdout
 3. Take that output and send it to the LLM to generate the content
 4. Save the generated content if the user requests it
+
+- When the user asks to "speak" or "say" something, or to "generate audio" or "tts" for a piece of text, use the `elevenlabs-tts` subagent. 
 
 **Key points:**
 - Set `PROJECT_DIR` env var to the **original working directory** where opencode was invoked - this ensures storyshell.js can find project files even after cd to skill directory
@@ -33,18 +34,17 @@ EOF
 
 Simple request:
 ```bash
-cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<< "$(cat <<EOF
+cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<'EOF'
 develop a character Tranh, 25, female, real estate agent
 EOF
-)"
 ```
 
 Complex multi-line request:
 ```bash
-cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<< "$(cat <<EOF
-develop a character Tranh, 25, female, real estate agent
+cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<EOF
+develop a character named Lucia. 
+Beylorussian female, 32, emigated to US via Barcelona, Ibiza, Miami. huge eyes, daddy complex
 EOF
-)"
 ```
 
 ## Usage

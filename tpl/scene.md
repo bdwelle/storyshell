@@ -109,7 +109,7 @@ modified: {today's date}
 
 [continue generating beats as needed for the scene]
 
-## Prose Generation Notes
+## Prose/POV Generation Notes
 
 These are notes included here for eventual, subsequent prose generation. 
 DO NOT generate full prose now. 

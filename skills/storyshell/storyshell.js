@@ -478,17 +478,18 @@ if (uniqueIncludes.length > 0) {
 }
 log("includes complete");
 
-// Add template body
-output += templateBody;
-log('templateBody added');
-
-// Add user prompt if provided
+// Add user prompt 
 if (primaryPrompt) {
-  output += `\n\n## Primary User Request`
-  output += `\n\nIMPORTANT: follow the following primary instructions precisely, using everything above as context:\n`;
+  // commented out because the template body has the final instructions 
+  // output += `\n\n## Primary User Request`
+  // output += `\n\nIMPORTANT: follow the following primary instructions precisely, using everything above as context:\n`;
   output += primaryPrompt;
   log('primaryPrompt added');
 }
+
+// Add template body
+output += templateBody;
+log('templateBody added', { file: templatePath });
 
 // Output to stdout
 console.log(output);

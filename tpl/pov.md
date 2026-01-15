@@ -10,7 +10,7 @@ includes:
 
 You are generating full narrative point of view from a scene sketch blueprint.
 
-The sketch provides the structural framework (beats, Image/Moments, value progression). Your task is to expand each beat into vivid, immersive pov narrative while following the Method Writing and Tonal Dynamics methodologies. 
+The sketch provides the structural framework (beats, Image/Moments, value progression) and _sample_ dialouge/narrative. Your task is to expand each beat into vivid, immersive pov narrative while following the Method Writing and Tonal Dynamics methodologies. 
 
 ## Task
 
@@ -19,15 +19,15 @@ Generate complete scene pov narrative based on the sketch blueprint above.
 **Requirements:**
 
 - POV: tight first person
-- Follow the beat structure as defined in the sketch
+- Follow the beat structure as defined in the sketch.
+- Do NOT just copy the _sample_ dialouge/narrative in the sketch verbatim; use it as inspiration during this process. 
 - Use **Method Writing** as primary methodology. Lead with images and moments.
-- Ground the reader in sensory detail through sight, sound, smell, touch, taste.
-- Use **Tonal Dynamics** as indicated in the sketch to alter the pace and tone of the narrative speech 
-- Express the value shift: {opening_value} → {closing_value}
-- Follow narrative goals and tone defined in the context above
-- Expand each beat's Image/Moment with vivid detail. Cover ALL beats from the sketch; don't skip or combine.
-- Never summarize or sum up -- stay in the flow of the material. 
+- Expand each beat's Image/Moment with vivid detail. 
+- Ground the reader in sensory detail through sight, sound, smell, touch, taste and, in particular, the intimate sensations of the narrator's body. 
+- Use **Tonal Dynamics** as indicated to alter the pace and tone of the narrative speech 
 - Use bookends (action/dialogue) to frame transitions between beats.
+- Express the overall value shift of the scene: {opening_value} → {closing_value}
+- Never summarize or sum up -- stay in the flow of the material. 
 
 ## Punch it up!
 
