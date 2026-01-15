@@ -11,47 +11,16 @@ StoryShell is a fiction writing assistant CLI built as a coding agent skill. It 
 
 While originally built for the _pi_ coding agent, it should work with Claude Code, Gemini CLI, or _opencode_.
 
-## Commands
+## Development Workflow
 
-### Installation & Setup
-```bash
-# Install StoryShell globally (one-time setup)
-./install.sh
+1. **Changes**: Edit files directly in the repository. 
 
-# Create new story project
-./setup-project.sh
-```
+IMPORTANT: Default to only making changes requested by the user. If you determine that other changes would be beneficial, ASK THE USER before making ANY changes not explicitly requested. 
 
-### Running StoryShell
-```bash
-# Use with pi-agent
-pi
-"create a character named Jimmy"
-"suggest some scenes about a skateboarder"
-"develop scene #2"
-```
-
-### Testing
-```bash
-# Test individual templates
-node skills/storyshell/run.js character "test character"
-node skills/storyshell/run.js scene "test scene"
-
-# Test with project context
-cd /path/to/project
-PI_USER_COMMAND="create a character" node /path/to/storyshell/skills/storyshell/run.js character "character description"
-```
-
-### Linting & Code Quality
-```bash
-# No formal linting setup - maintain clean code manually
-# Check Node.js syntax:
-node -c skills/storyshell/run.js
-
-# Validate shell scripts:
-bash -n install.sh
-bash -n setup-project.sh
-```
+2. **Testing**: Use manual testing with `node -c` for syntax
+3. **Installation**: Test with `./install.sh` after changes
+4. **Projects**: Test project creation with `./setup-project.sh`
+5. **Skills**: Test pi skill integration with actual pi-agent
 
 ## Code Style Guidelines
 
@@ -86,11 +55,13 @@ bash -n setup-project.sh
 ```
 storyshell/
 ├── skills/storyshell/         # LLM CLI agent skill implementation
-│   ├── run.js                 # Main template processor
+│   ├── storyshell.js                 # Main template processor
 │   └── SKILL.md               # Skill documentation
 ├── tpl/                       # Templates (character.md, scene.md, etc.)
 ├── prompts/                   # Methodology files (storygrid.md, etc.)
 ├── commands/storyshell/       # Custom LLM CLM commands (ss.md, noss.md)
+├── agents/                    # agent skills
+├── tools/                     # custom agent tools
 ├── install.sh                 # Global installation
 └── setup-project.sh           # Project creation
 ```
@@ -102,9 +73,9 @@ project/
 ├── characters/                # Character definitions
 ├── codex/                     # Concept library
 ├── scenes/                    # Scene sketches
-├── storylines/               # Story arcs
-├── prose/                    # Full prose scenes
-└── storyshell.log            # Execution log
+├── storylines/                # Story arcs
+├── prose/                     # Full prose scenes
+└── log/storyshell.log         # Execution log
 ```
 
 ## Import & Module Patterns
@@ -120,33 +91,6 @@ project/
 - Handle missing frontmatter gracefully
 - Support both simple values and arrays
 - Normalize keys to lowercase
-
-## Error Handling Patterns
-
-### JavaScript
-```javascript
-// Warning to stderr + log
-function warn(message) {
-  console.error(`Warning: ${message}`);
-  log('warning', { message });
-}
-
-// Graceful file handling
-if (!fs.existsSync(filePath)) {
-  warn(`File not found: ${filePath}`);
-  return defaultValue;
-}
-```
-
-### Shell Scripts
-```bash
-# Check before create
-if [ -L "$SKILL_LINK" ]; then
-    echo -e "${GREEN}  ✓ Already installed${NC}"
-else
-    ln -s "$TARGET" "$LINK"
-fi
-```
 
 ## Naming Conventions
 
@@ -166,50 +110,6 @@ fi
 - **JavaScript**: Verb phrases (`parseFrontmatter`, `buildConceptIndex`)
 - **Shell**: Verb phrases (`prompt_with_default`, `slugify`)
 
-## Testing Approach
-
-### Manual Testing
-1. Test template generation with various inputs
-2. Verify entity matching (concepts, characters)
-3. Test project creation and setup
-4. Validate include resolution and frontmatter parsing
-
-### Test Scenarios
-```bash
-# Template generation
-node run.js character "test character"
-node run.js scene "test scene"
-
-# Entity matching
-echo "Maya signs execon" | node run.js scene "test"
-
-# Project context
-cd test-project
-node ../storyshell/skills/storyshell/run.js character "test"
-```
-
-## Performance Considerations
-
-- **File Operations**: Use synchronous operations for simplicity and predictability
-- **Logging**: Minimal overhead, append-only log file
-- **Memory**: Load files individually, avoid caching large datasets
-- **Path Resolution**: Check multiple search paths in order of priority
-
-## Security Notes
-
-- **File Paths**: Validate and sanitize user-provided paths
-- **Command Injection**: Use parameterized execution patterns
-- **Symlinks**: Check existing targets before creation
-- **User Input**: Validate with defaults and required fields
-
-## Development Workflow
-
-1. **Changes**: Edit files directly in the repository
-2. **Testing**: Use manual testing with `node -c` for syntax
-3. **Installation**: Test with `./install.sh` after changes
-4. **Projects**: Test project creation with `./setup-project.sh`
-5. **Skills**: Test pi skill integration with actual pi-agent
-
 ## Debugging
 
 - **Logs**: Check `storyshell.log` in project directory for detailed execution info
@@ -219,7 +119,5 @@ node ../storyshell/skills/storyshell/run.js character "test"
 
 ## Integration Points
 
-- **Pi Agent**: Skill integration via `~/.pi/agent/skills/`
-- **Commands**: Pi commands via `~/.pi/agent/commands/`
 - **Projects**: User projects can be anywhere with proper structure
 - **Templates**: Framework templates in `tpl/`, project-specific overrides supported

@@ -9,6 +9,10 @@
 [x] TTS from file should parse YAML and MD title, use YAML.id in resulting audio filename, then strip YAML and MD title before sending for speech generation.  
 [x] add punch-up command
 [x] install/make TTS agent work from project dir 
+[x] move TTS agent from config to agents dir
+[x] fix naming of tts agent & tool 
+[x] rename run.js to storyshell.js
+[ ] set permissions to * allow so that the writer agent doesn't stop to ask for permission to access a directory
 
 [ ] improve example-project AGENTS.md
 [ ] revive setup-project.sh

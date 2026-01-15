@@ -1,31 +1,39 @@
 # Storyshell
 
-Simple story generation/fiction writing assistant CLI built as a [Pi coding agent](https://github.com/badlogic/pi-mono/tree/main/packages/coding-agent) skill.
+Simple story generation/fiction writing assistant CLI built as an agent and agent skill for opencode.
 
 ## Overview
 
-Storyshell uses markdown templates with embedded instructions to generate characters, scenes, storylines, and prose for fiction writing. It integrates Story Grid methodology and provides a simple, flexible workflow.
+Storyshell uses markdown templates with embedded instructions to generate characters, scenes, storylines, and pov/prose for fiction writing. It integrates Story Grid methodology with Method Writing technique and provides a simple, flexible workflow.
+
+### Writing
+`agents/storyshell-writer.md` defines a _Storyshell-Writer_ [agent](https://opencode.ai/docs/agents/) that should be used for all writing tasks. 
+`skills/storyshell/SKILL.md` defines an agent skill that lays out all of the _Storyshell_ commands. 
+`skills/storyshell/storyshell.js` implements specific _Storyshell_ commands (invoked by SKILL.md). 
+
+### Text to Speech
+`agents/elevenlabs-tts.md` defines an _Elevenlabs-TTS_ Text-to-Speech subagent. This can be used to convert user-provided text into spoken audio using the ElevenLabs service.
+`tools/elevenlabs-tts.js` defines an _Elevenlabs-TTS_ Text-to-Speech tool. This is called by `agents/elevenlabs-tts.md` to communicate with the Elevenlabs API. 
+
 
 ## Quick Start
 
 1. **Install the skill**:
    ```bash
-   ln -s /Users/bdwelle/lib/storyshell/pi-skills/storyshell ~/.pi/agent/skills/storyshell
+   install.sh
    ```
 
 2. **Set up a project**:
    ```bash
-   mkdir myproject
-   cd myproject
-   mkdir -p inc characters scenes storylines prose
-   cp /path/to/storyshell/proj/SYSTEM.md .
-   cp /path/to/storyshell/proj/inc/main.md inc/
+   ./setup_project.sh
    ```
 
-3. **Use with Pi**:
+3. **Use with Opencode**:
    ```bash
-   pi
-   # In Pi chat:
+   cd myproject
+   opencode
+   # In opencode chat:
+   # Switch to the _storyshell-writer_ agent
    # "Create a character who is a skateboarder punk"
    # "Suggest some scenes about an artist and a businessman"
    ```
@@ -42,7 +50,10 @@ Storyshell uses markdown templates with embedded instructions to generate charac
 storyshell/
 ├── inc/              # Shared context files (Story Grid, writing methods)
 ├── tpl/              # Templates
-├── pi-skills/
+├── agents/
+├── commands/
+├── tools/
+├── skills/
 │   └── storyshell/     # Pi skill implementation
 ├── example-project/             # Example project
 ```
