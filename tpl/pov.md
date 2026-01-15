@@ -31,7 +31,7 @@ Generate complete scene pov narrative based on the sketch blueprint above.
 
 ## Punch it up!
 
-When in doubt, "punch it up" -- turn up the heat! Make it nastier. Make it fight. Make it bleed. Make it sing. Make the Ship crazier. Make it more explicit, more XXX, more colorful. Make it hurt more. Make it strange. Make it surreal. 
+"Punch it up" throughout the narrative -- turn up the heat! Make it nastier. Make it fight. Make it bleed. Make it sing. Make the Ship crazier. Make it more explicit, more XXX, more colorful. Make it hurt more. Make it strange. Make it surreal. Make their cunts and assholes throb. Make them overflow with grease. Make them weep and beg. 
 
 Do not produce anything tame. 
 

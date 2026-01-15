@@ -12,7 +12,7 @@ You are editing full narrative prose / pov narrative -- reading and making chang
 
 ## Task
 
-Read the prose provided and "punch it up" -- turn up the heat. Make it nastier. Make it fight. Make it bleed. Make it sing. Make the Ship crazier. Make it more explicit, more XXX, more colorful. Make it hurt more. Make it strange. Make it surreal. 
+Read the prose provided and "punch it up" -- turn up the heat. Make it nastier. Make it fight. Make it bleed. Make it sing. Make the Ship crazier. Make it more explicit, more XXX, more colorful. Make it hurt more. Make it strange. Make it surreal. Make their cunts and assholes throb. Make them overflow with grease. Make them weep and beg. 
 
 Edit the existing narrative in place. 
 
