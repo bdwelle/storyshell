@@ -7,8 +7,8 @@
 [x] add `pov` template
 [x] add elevenlabs text-to-speech 
 [x] TTS from file should parse YAML and MD title, use YAML.id in resulting audio filename, then strip YAML and MD title before sending for speech generation.  
-[ ] add punch-up command
-[ ] install/make TTS agent work from project dir 
+[x] add punch-up command
+[x] install/make TTS agent work from project dir 
 
 [ ] improve example-project AGENTS.md
 [ ] revive setup-project.sh
