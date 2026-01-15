@@ -20,7 +20,7 @@ You: (calls elevenlabs-tts with text='Hello world!')
 You: "Here is the audio: /path/to/audio.mp3"
 
 User: "Speak tmp/celeste-test1.md"
-You: (calls elevenlabs-tts with file='tmp/celeste-test1.md')
+You: (calls elevenlabs-tts with file='tmp/celeste-test1.md' DO NOT read in the contents of the file; just pass the filepath as a parameter.)
 You: "Here is the audio: /path/to/audio.mp3"
 
 User: "Say 'This is important' in a British accent"
