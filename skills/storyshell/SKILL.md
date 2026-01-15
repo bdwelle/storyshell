@@ -11,7 +11,10 @@ description: Simple story generation assistant for fiction writing. Use for crea
 1. Invoke the appropriate template with this **invocation pattern**
 
 ```bash
-cd <SKILL_DIR> && PROJECT_DIR="{cwd}" LLM_USER_COMMAND="<original-user-message>" bash -c 'node run.js <template-name> "<agent-interpretation>"'
+cd <SKILL_DIR> && PROJECT_DIR="{cwd}" bash -c 'node storyshell.js <template-name>' <<< "$(cat <<EOF
+<original-user-message>
+EOF
+)"
 ```
 
 2. The script outputs a complete prompt (includes + template + user request) to stdout
@@ -19,26 +22,29 @@ cd <SKILL_DIR> && PROJECT_DIR="{cwd}" LLM_USER_COMMAND="<original-user-message>"
 4. Save the generated content if the user requests it
 
 **Key points:**
-- Set `PROJECT_DIR` env var to the **original working directory** where opencode was invoked - this ensures run.js can find project files even after cd to skill directory
+- Set `PROJECT_DIR` env var to the **original working directory** where opencode was invoked - this ensures storyshell.js can find project files even after cd to skill directory
 - Set `SKILL_DIR` env var to the directory where the storyshell skill in installed
-- Set `LLM_USER_COMMAND` env var to the **original user message exactly as they typed it** - this ensures run.js has access to the actual prompt with all formatting and context
+- Pass the **original user message** via HEREDOC after `<<<` - this ensures storyshell.js has access to the actual prompt with all formatting and context
 - `<template-name>` is one of: `character-interview`, `character`, `scene-suggest`, `scene`, `storyline-suggest`, `storyline`, `pov`, `prose`
-- `<agent-interpretation>` is your (the agent's) interpretation/processing of the user request
-- The script automatically extracts filenames, concept tokens, and character names from both sources
+- The script automatically extracts filenames, concept tokens, and character names from the user prompt
 - All relevant context is loaded and included in the output
 
 **Examples:**
 
 Simple request:
 ```bash
-cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" LLM_USER_COMMAND="develop a character Tranh, 25, female, real estate agent" bash -c 'node run.js character-interview "Tranh, 25, female, real estate agent"'
+cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<< "$(cat <<EOF
+develop a character Tranh, 25, female, real estate agent
+EOF
+)"
 ```
 
 Complex multi-line request:
 ```bash
-cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" LLM_USER_COMMAND="develop a character Tranh, 25, female, real estate agent" bash -c 'node run.js character-interview "Tranh, 25, 
-female, 
-real estate agent"'
+cd /Users/bdwelle/lib/storyshell/skills/storyshell && PROJECT_DIR="/Users/bdwelle/Library/CloudStorage/ProtonDrive-bdwelle@pm.me-folder/stories/ship" bash -c 'node storyshell.js character-interview' <<< "$(cat <<EOF
+develop a character Tranh, 25, female, real estate agent
+EOF
+)"
 ```
 
 ## Usage
@@ -206,7 +212,7 @@ If user asks to save the generated content, use the `output` field from the temp
 User: "Create a scene where an artist meets a businessman at a gallery opening"
 
 You:
-1. Invoke `scene` "artist meets a businessman at a gallery opening"
+1. Invoke `scene` using HEREDOC with "Create a scene where an artist meets a businessman at a gallery opening"
 2. Take the stdout output (which includes context + template + user request)
 3. Send that complete prompt to the LLM
 4. LLM generates a scene sketch following the template structure
@@ -220,12 +226,12 @@ You:
 
 ## Notes
 
-- **Project Context Required:** `run.js` requires `prompts/main.md` in the current working directory. This file contains project-specific context (world, tone, etc.). Processing will fail with an error if not found.
+- **Project Context Required:** `storyshell.js` requires `prompts/main.md` in the current working directory. This file contains project-specific context (world, tone, etc.). Processing will fail with an error if not found.
 - **Concept Files:** Place domain-specific concept files in your project's `codex/` directory with frontmatter including `aliases` and `related_concepts` for automatic loading
 - **Character Files:** Place character definitions in your project's `characters/` directory with frontmatter including `aliases`, `related_characters`, and `related_concepts`
 - **Entity Matching:** Single words from user prompts are matched against entity filenames and aliases (case-insensitive, exact match)
 - **Relationship Loading:** When a character/concept is matched, its `related_characters` and `related_concepts` are automatically loaded
 - Templates also include story methodology files (Storygrid, Method Writing, etc.) from their frontmatter
-- The `run.js` script logs all operations to `log/storyshell.log` in the current directory, including entity matching details
+- The `storyshell.js` script logs all operations to `log/storyshell.log` in the current directory, including entity matching details
 - Missing include files (other than prompts/main.md) generate warnings but don't stop processing
 - User must be in their project directory when running commands

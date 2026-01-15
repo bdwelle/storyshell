@@ -33,20 +33,26 @@ log('argv', {
 });
 
 if (args.length < 1) {
-  console.error('Usage: run.js <template-name> [user-prompt]');
+  console.error('Usage: storyshell.js <template-name>');
   process.exit(1);
 }
 
-// these args are set by the **invocation pattern** in SKIL.md
 const templateName = args[0];
-const agentInterpretation = args.slice(1).join(' ');
 
-// Get the primary prompt (original user command if available, else agent interpretation)
-const primaryPrompt = process.env.LLM_USER_COMMAND || agentInterpretation;
+// Read original user message from stdin
+let originalUserMessage = '';
+if (!process.stdin.isTTY) {
+  try {
+    originalUserMessage = fs.readFileSync('/dev/stdin', 'utf8').trim();
+  } catch (e) {
+    // stdin not available
+  }
+}
+
+const primaryPrompt = originalUserMessage;
 
 log('run', { 
   template: templateName, 
-  agentInterpretation: agentInterpretation,
   primaryPrompt: primaryPrompt
 });
 
@@ -342,8 +348,8 @@ const match = templateContent.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
 if (!match) {
   // No frontmatter - just output template
   console.log(templateContent);
-  if (userPrompt) {
-    console.log(`\n\nUser request: ${userPrompt}\n`);
+  if (primaryPrompt) {
+    console.log(`\n\nUser request: ${primaryPrompt}\n`);
   }
   log('output', { bytes: templateContent.length });
   process.exit(0);
@@ -421,6 +427,9 @@ for (const inc of includes) {
     seen.add(inc);
   }
 }
+
+// Alpha sort by filename
+uniqueIncludes.sort();
 
 log('includes_final', {
   total: uniqueIncludes.length,
