@@ -59,7 +59,7 @@ function log(operation, details = {}) {
     .map(([k, v]) => `${k}=${v}`)
     .join(' ');
   const logLine = `${timestamp} ${operation} ${detailsStr}\n`;
-  const logPath = path.join(projectDir, 'log/storyshell.log');
+  const logPath = path.join(projectDir, 'log', 'storyshell.log');
   fs.appendFileSync(logPath, logLine);
 }
 
