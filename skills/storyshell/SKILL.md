@@ -6,7 +6,7 @@ description: Simple story generation assistant for fiction writing. Use for crea
 ## How to use me 
 
 - Use this skill for creating fictional characters, scenes, storylines, pov, and prose.
-- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing: 
+- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing, punch up: 
 
 1. Invoke the appropriate template with this **invocation pattern**
 
@@ -42,6 +42,29 @@ real estate agent"'
 ```
 
 ## Usage
+
+### Punch-up Writing (Interactive Process)
+
+When user says something like:
+- "punch up pov/celeste-stretching-test-1600.md"
+
+Run:
+- invoke the `punch-up` template
+
+The punch-up template will use the context to "punch up" the prose or pov narrative
+
+**Example Workflow:**
+```
+User: "Develop a character named Bo, age 15, male"
+
+You: 
+1. invoke the `character-interview` template
+2. Show the generated questions to user
+3. User answers the questions in conversation
+4. invoke the `character` template
+   (with full conversation in context)
+5. Generate and show the complete character profile
+```
 
 ### Develop a Character (Interactive Process)
 

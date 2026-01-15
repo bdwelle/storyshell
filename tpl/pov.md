@@ -29,11 +29,15 @@ Generate complete scene pov narrative based on the sketch blueprint above.
 - Never summarize or sum up -- stay in the flow of the material. 
 - Use bookends (action/dialogue) to frame transitions between beats.
 
+## Punch it up!
+
+When in doubt, "punch it up" -- turn up the heat! Make it nastier. Make it fight. Make it bleed. Make it sing. Make the Ship crazier. Make it more explicit, more XXX, more colorful. Make it hurt more. Make it strange. Make it surreal. 
+
+Do not produce anything tame. 
+
 ## Word Count Target
 
-**Minimum:** {word_count} words (do not submit less)  
-
-The scene must be COMPLETE even if it exceeds the target. Better too long than incomplete.Generate the ENTIRE scene in ONE response if possible. Do NOT create partial drafts.
+**Minimum:** {word_count} words. However, lean towards tighter & more focused while keeping the visceral intensity HIGH.
 
 ## Template Structure
 
@@ -62,3 +66,4 @@ modified: {today's date}
 ## Generate Now
 
 Using the sketch blueprint above, the story context provided, and the template structure here, **generate the complete scene pov narrative now**.
+
