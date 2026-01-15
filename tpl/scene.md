@@ -47,16 +47,13 @@ chapter: {chapter number}
 scene: {scene number}
 storyline: {storyline id if applicable}
 pov: {point of view character}
+characters: 
+  - [character-1]
+  - [character-2]
 location: [Location description]
 codex_references:
   - [reference-1]
   - [reference-2]
-value: [Story Value]
-opening_value: 0
-closing_value: 0
-polarity: [positive/negative/ironic]
-turning_point_type: [action/revelation/decision]
-turning_point: "[Brief description]"
 created: {today's date}
 modified: {today's date}
 ---
@@ -75,8 +72,14 @@ modified: {today's date}
 - [Key progression]
 - [Value shift]
 
+## Polarity
+[positive/negative/ironic]
+
 ## Opening Value: {value} ({opening_value})
 [1-2 sentences: starting state]
+
+## Turning Point
+[Brief description]
 
 ## Closing Value: {value} ({closing_value})
 [1-2 sentences: ending state and why it changed]
@@ -92,7 +95,7 @@ modified: {today's date}
 **Pacing:** [slow/medium/fast, how to use images to stretch psychological time]
 **Tonal Dynamics:** [Which techniques to use and when - Transformation Line, Deep Voice, Dreaded Association, Straight Talk, Lost World, Read & Sung, Teeth & Mouth, Surrealism]
 **Bookend:** [Action or dialogue]
-**Image/Moment:** [use any or all of Set, Set Dressing, Mood, Props, Character, Costume, and/or Commentary as appropriate for the beat]
+**Image/Moment:** [describe the Image of the 'Moment' with any or all of Set, Set Dressing, Mood, Props, Character, Costume, and/or Commentary as appropriate for the beat. Do NOT write prose here, just describe the image in bullet points.]
 **Bookend:** [Action or dialogue]
 
 ### Beat 2: [Name]
@@ -101,7 +104,7 @@ modified: {today's date}
 **Pacing:** [slow/medium/fast, how to use images to stretch psychological time]
 **Tonal Dynamics:** [Which techniques to use and when]
 **Bookend:** [Action or dialogue]
-**Image/Moment:** [use any or all of Set, Set Dressing, Mood, Props, Character, Costume, and/or Commentary as appropriate for the beat]
+**Image/Moment:** [describe the Image of the 'Moment' with any or all of Set, Set Dressing, Mood, Props, Character, Costume, and/or Commentary as appropriate for the beat. Do NOT write prose here, just describe the image in bullet points.]
 **Bookend:** [Action or dialogue]
 
 [continue generating beats as needed for the scene]
