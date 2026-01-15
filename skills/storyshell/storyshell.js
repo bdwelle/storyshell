@@ -268,15 +268,21 @@ function findConceptFiles(prompt, conceptIndex) {
     source: 'user_prompt'
   });
   
+  // this is the actual matching
+  // IMPORTANT: it only works on SINGLE WORDS
+  // e.g. "the twins" <> "twins"
   for (const token of tokens) {
     if (conceptIndex[token]) {
       matchedFiles.add(conceptIndex[token]);
+      log('concept token matched', { 
+        matched_token: conceptIndex[token]
+      });
     }
   }
   
   if (matchedFiles.size > 0) {
     log('concept_matching', { 
-      matches: JSON.stringify(Array.from(matchedFiles)),
+      matches: matchedFiles.size,
       status: 'ok'
     });
   }
@@ -486,6 +492,10 @@ if (primaryPrompt) {
   output += primaryPrompt;
   log('primaryPrompt added');
 }
+
+// Add noclobber hint
+output += "IMPORTANT: if you do save any output to a file, be sure not to clobber any of the files you may have read in as part of the context or templates!";
+log('noclobber hint added', { file: templatePath });
 
 // Add template body
 output += templateBody;
