@@ -294,7 +294,7 @@ async function generateStylePrompt(projectContext, characterProfile, text, proje
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  const directorsNotePrompt = `Generate a concise Director's Note (max 100 words) for text-to-speech voice performance.
+  const directorsNotePrompt = `Generate a concise Director's Note (max 50 words) for text-to-speech voice performance.
 
 ## Project Context
 ${projectContext}
@@ -307,7 +307,7 @@ ${text.substring(0, 500)}
 
 Write only the Director's Note - a brief performance guide covering voice style, pacing, emotion, and any specific delivery instructions. Be specific and actionable.`;
 
-  log('tts', { directorsNotePrompt: directorsNotePrompt.substring(0, 200) }, projectDir);
+  // log('tts', { directorsNotePrompt: directorsNotePrompt.substring(0, 200) }, projectDir);
 
   try {
     const response = await ai.models.generateContent({
@@ -374,6 +374,8 @@ function convertToWav(rawData, mimeType) {
 }
 
 async function handleTtsRequest(templateName, primaryPrompt, projectDir, projectMainPath, VOICE_MAP, log, warn, extractExplicitPaths, parseFrontmatter, buildConceptIndex, findConceptFiles, loadRelatedConcepts, generateStylePrompt, GoogleGenAI, convertToWav, skillRoot) {
+  let stylePrompt = '';
+  let voiceName = 'Leda'; // default
   // Extract target file from prompt
   const explicitPaths = extractExplicitPaths(primaryPrompt);
   if (explicitPaths.length === 0) {
@@ -397,39 +399,47 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
   const bodyMatch = targetContent.match(/^---\n([\s\S]*?\n---\n)?([\s\S]*)$/);
   const bodyText = bodyMatch ? bodyMatch[2].trim() : targetContent.trim();
 
-  // Extract POV from frontmatter
-  const povName = targetFrontmatter.pov;
-  log('tts', { target: targetFile, pov: povName }, projectDir);
+  // Extract Character/POV from frontmatter
+  const characterName = targetFrontmatter.pov;
+  log('tts', { target: targetFile, pov: characterName }, projectDir);
 
-  // Load character file for POV
-  let characterProfile = '';
-  let voiceName = 'Leda'; // default
+  const ttsStyle = targetFrontmatter.tts_style || '';
+  if (ttsStyle) { 
+	  log('tts', { ttsStyle: ttsStyle }, projectDir); 
+	  stylePrompt = ttsStyle;
+  } else {
 
-  if (povName) {
-    const conceptIndex = buildConceptIndex(projectDir);
-    const characterFiles = findConceptFiles(povName, conceptIndex, projectDir);
+	  // Load character file for POV
+	  let characterProfile = '';
 
-    if (characterFiles.length > 0) {
-      const charFile = characterFiles[0];
-      const charPath = path.join(projectDir, charFile);
-      const charContent = fs.readFileSync(charPath, 'utf8');
-      characterProfile = charContent.replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
+	  if (characterName) {
+	    const conceptIndex = buildConceptIndex(projectDir);
+	    const characterFiles = findConceptFiles(characterName, conceptIndex, projectDir);
 
-      // Look up voice from mapping
-      const normalizedPov = povName.toLowerCase().replace(/\s+/g, '-');
-      if (VOICE_MAP[normalizedPov]) {
-        voiceName = VOICE_MAP[normalizedPov];
-      }
-    }
+	    if (characterFiles.length > 0) {
+	      const charFile = characterFiles[0];
+	      const charPath = path.join(projectDir, charFile);
+	      const charContent = fs.readFileSync(charPath, 'utf8');
+	      characterProfile = charContent.replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
+
+	      // Look up voice from mapping
+	      const normalizedPov = characterName.toLowerCase().replace(/\s+/g, '-');
+	      if (VOICE_MAP[normalizedPov]) {
+	        voiceName = VOICE_MAP[normalizedPov];
+	      }
+	    }
+	  }
+
+	  // Load project context
+	  const projectContext = fs.readFileSync(projectMainPath, 'utf8')
+	    .replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
+
+	  // Generate style prompt
+	  stylePrompt = await generateStylePrompt(projectContext, characterProfile, bodyText, projectDir);
+	  //log('tts', { stylePrompt: stylePrompt.substring(0, 200) }, projectDir);
   }
 
-  // Load project context
-  const projectContext = fs.readFileSync(projectMainPath, 'utf8')
-    .replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
-
-  // Generate style prompt
-  const stylePrompt = await generateStylePrompt(projectContext, characterProfile, bodyText, projectDir);
-  log('tts', { stylePrompt: stylePrompt.substring(0, 200), voiceName }, projectDir);
+  log('tts', { stylePrompt: stylePrompt }, projectDir);
   log('tts', { voiceName: voiceName }, projectDir);
 
   // Ensure voice directory exists
