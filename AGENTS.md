@@ -102,7 +102,9 @@ project/
 - **Scripts**: kebab-case with extension (`setup-project.sh`)
 
 ### Variables
-- **JavaScript**: `camelCase` (`templateName`, `conceptIndex`)
+- **JavaScript**: 
+	- `UPPER_SNAKE_CASE` for global constants
+	- `camelCase` (`templateName`, `conceptIndex`) for variables
 - **Shell**: `UPPER_SNAKE_CASE` for constants, `lower_case` for variables
 - **Frontmatter**: `snake_case` for keys (`related_concepts`)
 
