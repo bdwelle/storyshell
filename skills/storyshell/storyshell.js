@@ -6,28 +6,37 @@ const { GoogleGenAI } = require('@google/genai');
 // PST offset (8 hours behind UTC)
 const PST_OFFSET_MS = -8 * 60 * 60 * 1000;
 
-// Voice mapping for TTS
 const VOICE_MAP = {
-  'celeste': 'Leda',
+  // 'celeste': 'Leda',
+  'anya': 'Zephyr',
+  'lucia': 'Zephyr',
+  'lucia': 'Zephyr',
+  'twins': 'Leda',
+  'celeste': 'Zephyr',
 };
 
+const PROJECT_DIR = process.env.PROJECT_DIR || process.cwd();
+
 // Logging function - single-line entries to storyshell.log
-function log(operation, details = {}, projectDir) {
+function log(operation, details = undefined) {
   const now = new Date();
   const pstTime = new Date(now.getTime() + PST_OFFSET_MS);
   const timestamp = pstTime.toISOString().replace('Z', ' PST');
-  const detailsStr = Object.entries(details)
-    .map(([k, v]) => `${k}=${v}`)
-    .join(' ');
-  const logLine = `${timestamp} ${operation} ${detailsStr}\n`;
-  const logPath = path.join(projectDir, 'log', 'storyshell.log');
+  let detailsStr = '';
+  if (details && Object.keys(details).length > 0) {
+    detailsStr = ' ' + Object.entries(details)
+      .map(([k, v]) => `${k}=${v}`)
+      .join(' ');
+  }
+  const logLine = `${timestamp} ${operation}${detailsStr}\n`;
+  const logPath = path.join(PROJECT_DIR, 'log', 'storyshell.log');
   fs.appendFileSync(logPath, logLine);
 }
 
 // Error handling - warnings to stderr
-function warn(message, projectDir) {
+function warn(message) {
   console.error(`Warning: ${message}`);
-  log('warning', { message }, projectDir);
+  log('warning', { message });
 }
 
 // Parse includes from YAML frontmatter
@@ -95,9 +104,9 @@ function parseFrontmatter(content) {
 }
 
 // Helper: Scan a directory and add files to the index
-function scanDirectory(dir, index, prefix, options = {}, projectDir) {
+function scanDirectory(dir, index, prefix, options = {}) {
   if (!fs.existsSync(dir)) {
-    log('scan_directory', { dir: prefix, status: 'not_found' }, projectDir);
+    log('scan_directory', { dir: prefix, status: 'not_found' });
     return 0;
   }
 
@@ -134,34 +143,32 @@ function scanDirectory(dir, index, prefix, options = {}, projectDir) {
         index[nameLower] = relPath;
       }
     } catch (err) {
-      warn(`Error parsing ${file}: ${err.message}`, projectDir);
+      warn(`Error parsing ${file}: ${err.message}`);
     }
   }
 
-  log('scan_directory', { dir: prefix, status: 'ok', files: files.length }, projectDir);
+  log('scan_directory', { dir: prefix, status: 'ok', files: files.length });
   return files.length;
 }
 
 // Build unified entity index from codex/ and characters/ directories
-function buildConceptIndex(projectDir) {
+function buildConceptIndex() {
   const index = {}; // { "steg": "codex/steg.md", "maya": "characters/maya-chen.md", ... }
 
   // Scan codex/ for concepts
   const conceptCount = scanDirectory(
-    path.join(projectDir, 'codex'),
+    path.join(PROJECT_DIR, 'codex'),
     index,
     'codex',
-    {},
-    projectDir
+    {}
   );
 
   // Scan characters/ for character files
   const characterCount = scanDirectory(
-    path.join(projectDir, 'characters'),
+    path.join(PROJECT_DIR, 'characters'),
     index,
     'characters',
-    {},
-    projectDir
+    {}
   );
 
   log('entity_index', {
@@ -169,7 +176,7 @@ function buildConceptIndex(projectDir) {
     concepts: conceptCount,
     characters: characterCount,
     total_entries: Object.keys(index).length
-  }, projectDir);
+  });
 
   return index;
 }
@@ -212,14 +219,14 @@ function extractConceptTokens(prompt) {
 }
 
 // Find concept files matching user prompt
-function findConceptFiles(prompt, conceptIndex, projectDir) {
+function findConceptFiles(prompt, conceptIndex) {
   const tokens = extractConceptTokens(prompt);
   const matchedFiles = new Set();
 
   log('concept_extraction', {
     tokens: JSON.stringify(tokens),
     source: 'user_prompt'
-  }, projectDir);
+  });
 
   // this is the actual matching
   // IMPORTANT: it only works on SINGLE WORDS
@@ -229,7 +236,7 @@ function findConceptFiles(prompt, conceptIndex, projectDir) {
       matchedFiles.add(conceptIndex[token]);
       log('concept token matched', {
         matched_token: conceptIndex[token]
-      }, projectDir);
+      });
     }
   }
 
@@ -237,16 +244,16 @@ function findConceptFiles(prompt, conceptIndex, projectDir) {
     log('concept_matching', {
       matches: matchedFiles.size,
       status: 'ok'
-    }, projectDir);
+    });
   }
 
   return Array.from(matchedFiles);
 }
 
 // Load related entities (concepts + characters) from a file's frontmatter
-function loadRelatedConcepts(conceptFile, conceptIndex, projectDir) {
+function loadRelatedConcepts(conceptFile, conceptIndex) {
   const relatedFiles = [];
-  const filePath = path.join(projectDir, conceptFile);
+  const filePath = path.join(PROJECT_DIR, conceptFile);
 
   if (!fs.existsSync(filePath)) return relatedFiles;
 
@@ -276,38 +283,43 @@ function loadRelatedConcepts(conceptFile, conceptIndex, projectDir) {
       log('related_entities', {
         from: conceptFile,
         loaded: JSON.stringify(relatedFiles)
-      }, projectDir);
+      });
     }
   } catch (err) {
-    warn(`Error loading related entities from ${conceptFile}: ${err.message}`, projectDir);
+    warn(`Error loading related entities from ${conceptFile}: ${err.message}`);
   }
 
   return relatedFiles;
 }
 
 // Generate TTS style prompt via LLM
-async function generateStylePrompt(projectContext, characterProfile, text, projectDir) {
+async function generateTTSStylePrompt(projectMainContext, characterProfile, text) {
   if (!process.env.GEMINI_API_KEY) {
-    warn('GEMINI_API_KEY not set, using default style', projectDir);
+    warn('GEMINI_API_KEY not set, using default style');
     return 'Read this naturally.';
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-  const directorsNotePrompt = `Generate a concise Director's Note (max 50 words) for text-to-speech voice performance.
+  // generate a "Director's Note" that will be passed as a prompt along with the TTS text
+  // https://ai.google.dev/gemini-api/docs/speech-generation#prompting-guide
+  // for context here we pass in main.md, the pov character profile, 
+  // and a snippet of the TTS text 
+   
+  const directorsNotePrompt = `Generate a very concise Director's Note (max 20 words) for text-to-speech voice performance, using the following context: 
 
-## Project Context
-${projectContext}
+## Project Context from main.md 
+${projectMainContext}
 
 ## Character Profile
 ${characterProfile}
 
-## Text to Read
+## Sample of Text to Read
 ${text.substring(0, 500)}
 
-Write only the Director's Note - a brief performance guide covering voice style, pacing, emotion, and any specific delivery instructions. Be specific and actionable.`;
+Write only the Director's Note - a very brief performance guide covering voice style, pacing, emotion, and any specific delivery instructions. Be specific and actionable.`;
 
-  // log('tts', { directorsNotePrompt: directorsNotePrompt.substring(0, 200) }, projectDir);
+// log('tts', { directorsNotePrompt: directorsNotePrompt.substring(0, 200) } );
 
   try {
     const response = await ai.models.generateContent({
@@ -316,7 +328,7 @@ Write only the Director's Note - a brief performance guide covering voice style,
     });
     return response.text.trim();
   } catch (err) {
-    warn(`Failed to generate style prompt: ${err.message}`, projectDir);
+    warn(`Failed to generate style prompt: ${err.message}`);
     return 'Read this naturally.';
   }
 }
@@ -373,52 +385,61 @@ function convertToWav(rawData, mimeType) {
   return Buffer.concat([wavHeader, buffer]);
 }
 
-async function handleTtsRequest(templateName, primaryPrompt, projectDir, projectMainPath, VOICE_MAP, log, warn, extractExplicitPaths, parseFrontmatter, buildConceptIndex, findConceptFiles, loadRelatedConcepts, generateStylePrompt, GoogleGenAI, convertToWav, skillRoot) {
-  let stylePrompt = '';
-  let voiceName = 'Leda'; // default
-  // Extract target file from prompt
+async function handleTtsRequest(templateName, primaryPrompt, projectMainPath) {
+
+  let TTSstylePrompt = '';
+  // default voice from https://ai.google.dev/gemini-api/docs/speech-generation#voices
+  let voiceName = 'Leda'; 
+
+  // Extract TTS file from prompt
   const explicitPaths = extractExplicitPaths(primaryPrompt);
   if (explicitPaths.length === 0) {
     console.error('Error: No target file specified for TTS');
     process.exit(1);
   }
 
-  const targetFile = explicitPaths[0];
-  const targetPath = path.join(projectDir, targetFile);
+  const ttsFile = explicitPaths[0];
+  const ttsPath = path.join(PROJECT_DIR, ttsFile);
 
-  if (!fs.existsSync(targetPath)) {
-    console.error(`Error: Target file not found: ${targetPath}`);
+  if (!fs.existsSync(ttsPath)) {
+    console.error(`Error: TTS file not found: ${ttsPath}`);
     process.exit(1);
   }
 
-  // Read target file and parse frontmatter
-  const targetContent = fs.readFileSync(targetPath, 'utf8');
-  const targetFrontmatter = parseFrontmatter(targetContent);
+  // Read TTS file and parse frontmatter
+  const ttsFileContent = fs.readFileSync(ttsPath, 'utf8');
+  const ttsFrontmatter = parseFrontmatter(ttsFileContent);
 
   // Extract body text (strip frontmatter)
-  const bodyMatch = targetContent.match(/^---\n([\s\S]*?\n---\n)?([\s\S]*)$/);
-  const bodyText = bodyMatch ? bodyMatch[2].trim() : targetContent.trim();
+  const ttsMatch = ttsFileContent.match(/^---\n([\s\S]*?\n---\n)?([\s\S]*)$/);
+  const ttsText = ttsMatch ? ttsMatch[2].trim() : ttsFileContent.trim();
 
   // Extract Character/POV from frontmatter
-  const characterName = targetFrontmatter.pov;
-  log('tts', { target: targetFile, pov: characterName }, projectDir);
+  const characterName = ttsFrontmatter.pov;
+  log('tts', { ttsFile: ttsFile, pov: characterName });
 
-  const ttsStyle = targetFrontmatter.tts_style || '';
-  if (ttsStyle) { 
-	  log('tts', { ttsStyle: ttsStyle }, projectDir); 
-	  stylePrompt = ttsStyle;
+  // Check for voiceName in frontmatter 
+  if (ttsFrontmatter.tts_voice) {
+    voiceName = ttsFrontmatter.tts_voice;
+    log('tts voice from YAML', { voiceName: ttsFrontmatter.tts_voice });
+  }
+
+  // Check for TTS style prompt in frontmatter 
+  if (ttsFrontmatter.tts_style) { 
+	  TTSstylePrompt = ttsFrontmatter.tts_style;
+	  log('tts style from YAML', { TTSstylePrompt: ttsFrontmatter.tts_style }); 
   } else {
 
 	  // Load character file for POV
 	  let characterProfile = '';
 
 	  if (characterName) {
-	    const conceptIndex = buildConceptIndex(projectDir);
-	    const characterFiles = findConceptFiles(characterName, conceptIndex, projectDir);
+	    const conceptIndex = buildConceptIndex();
+	    const characterFiles = findConceptFiles(characterName, conceptIndex);
 
 	    if (characterFiles.length > 0) {
 	      const charFile = characterFiles[0];
-	      const charPath = path.join(projectDir, charFile);
+	      const charPath = path.join(PROJECT_DIR, charFile);
 	      const charContent = fs.readFileSync(charPath, 'utf8');
 	      characterProfile = charContent.replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
 
@@ -430,20 +451,21 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
 	    }
 	  }
 
-	  // Load project context
-	  const projectContext = fs.readFileSync(projectMainPath, 'utf8')
+	  // Load project context WITHOUT processing includes
+	  const projectMainContext = fs.readFileSync(projectMainPath, 'utf8')
 	    .replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
 
 	  // Generate style prompt
-	  stylePrompt = await generateStylePrompt(projectContext, characterProfile, bodyText, projectDir);
-	  //log('tts', { stylePrompt: stylePrompt.substring(0, 200) }, projectDir);
+	  TTSstylePrompt = await generateTTSStylePrompt(projectMainContext, characterProfile, ttsText);
+	  //log('tts', { TTSstylePrompt: TTSstylePrompt.substring(0, 200) } );
   }
 
-  log('tts', { stylePrompt: stylePrompt }, projectDir);
-  log('tts', { voiceName: voiceName }, projectDir);
+  log('tts', { voiceName: voiceName });
+  log('tts', { TTSstylePrompt: TTSstylePrompt });
+  //log('tts', { ttsText: ttsText }); // can be very long, only log if debugging
 
   // Ensure voice directory exists
-  const voiceDir = path.join(projectDir, 'voice');
+  const voiceDir = path.join(PROJECT_DIR, 'voice');
   if (!fs.existsSync(voiceDir)) {
     fs.mkdirSync(voiceDir, { recursive: true });
   }
@@ -455,8 +477,14 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
   }
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+  const model = 'gemini-2.5-flash-preview-tts';
+  const toTTS = `
+###DIRECTOR'S NOTES:
+${TTSstylePrompt}
 
-  const contentText = stylePrompt ? `${stylePrompt}\n\n${bodyText}` : bodyText;
+###TEXT TO SPEAK:
+${ttsText}
+`;
   const config = {
     temperature: 1,
     responseModalities: ['audio'],
@@ -467,9 +495,8 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
     }
   };
 
-  const model = 'gemini-2.5-flash-preview-tts';
-  const contents = [{ role: 'user', parts: [{ text: contentText }] }];
-
+  log('tts - calling', { model : model });
+  const contents = [{ role: 'user', parts: [{ toTTS: toTTS }] }];
   const response = await ai.models.generateContentStream({
     model, config, contents
   });
@@ -477,11 +504,13 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
   let audioChunks = [];
   let mimeType = null;
 
+  log('tts - waiting for audio');
   for await (const chunk of response) {
     if (!chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData) continue;
     const inlineData = chunk.candidates[0].content.parts[0].inlineData;
     mimeType = inlineData.mimeType;
     audioChunks.push(inlineData.data);
+    log('tts - got audio chunk', { count: audioChunks.length });
   }
 
   if (audioChunks.length === 0) {
@@ -490,38 +519,38 @@ async function handleTtsRequest(templateName, primaryPrompt, projectDir, project
   }
 
   // Convert to WAV
+  log('tts - converting audio to WAV');
   const combinedBase64 = audioChunks.join('');
   const wavBuffer = convertToWav(combinedBase64, mimeType);
 
   // Save to voice directory
   const timestamp = Date.now();
-  const safeFileName = targetFile.replace(/[^a-zA-Z0-9]/g, '-');
+  const safeFileName = ttsFile.replace(/[^a-zA-Z0-9]/g, '-');
   const voiceFileName = `tts-${timestamp}-${safeFileName}.wav`;
   const voicePath = path.join(voiceDir, voiceFileName);
   fs.writeFileSync(voicePath, wavBuffer);
   console.log(voicePath);
-  log('tts_complete', { file: voicePath }, projectDir);
+  log('tts_complete', { file: voicePath });
 }
 
 async function main() {
   // Setup directory paths - must be before log function
   const baseDir = process.env.SKILL_DIR || process.cwd();
   const skillRoot = path.join(baseDir, '../..');  // Go up to storyshell root
-  const projectDir = process.env.PROJECT_DIR || process.cwd();
-  const projectMainPath = path.join(projectDir, 'prompts/main.md');
+  const projectMainPath = path.join(PROJECT_DIR, 'prompts/main.md');
 
   // Log start of execution
-  log('START storyshell (js-big-skill)', {}, projectDir);
+  log('START storyshell (js-big-skill)', {});
 
   // Log directory constants for debugging
   log('directory_constants', {
     baseDir: baseDir,
     skillRoot: skillRoot,
-    projectDir: projectDir,
+    PROJECT_DIR: PROJECT_DIR,
     projectMainPath: projectMainPath,
     cwd: process.cwd(),
     scriptPath: __filename
-  }, projectDir);
+  });
 
   // Parse command line arguments
   const args = process.argv.slice(2);
@@ -529,7 +558,7 @@ async function main() {
   // Log the original command line arguments
   log('argv', {
     args: JSON.stringify(process.argv.slice(2))
-  }, projectDir);
+  });
 
   if (args.length < 1) {
     console.error('Usage: storyshell.js <template-name>');
@@ -553,23 +582,23 @@ async function main() {
   log('run', {
     template: templateName,
     primaryPrompt: primaryPrompt
-  }, projectDir);
+  });
 
   // Read template file from root tpl/ directory
   const templatePath = path.join(skillRoot, 'tpl', `${templateName}.md`);
   if (!fs.existsSync(templatePath)) {
-    warn(`Template not found: ${templatePath}`, projectDir);
-    log('error', { type: 'template_not_found', path: templatePath }, projectDir);
+    warn(`Template not found: ${templatePath}`);
+    log('error', { type: 'template_not_found', path: templatePath });
     process.exit(1);
   }
 
   let templateContent = fs.readFileSync(templatePath, 'utf8');
-  log('template', { file: templatePath, status: 'ok' }, projectDir);
+  log('template', { file: templatePath, status: 'ok' });
 
   // If TTS template, templateContent is not needed
   if (templateName === 'tts') {
     templateContent = '';
-    await handleTtsRequest(templateName, primaryPrompt, projectDir, projectMainPath, VOICE_MAP, log, warn, extractExplicitPaths, parseFrontmatter, buildConceptIndex, findConceptFiles, loadRelatedConcepts, generateStylePrompt, GoogleGenAI, convertToWav, skillRoot);
+    await handleTtsRequest(templateName, primaryPrompt, projectMainPath);
     process.exit(0); // Exit after handling TTS
   }
 
@@ -583,7 +612,7 @@ async function main() {
     if (primaryPrompt) {
       console.log(`\n\nUser request: ${primaryPrompt}\n`);
     }
-    log('output', { bytes: templateContent.length }, projectDir);
+    log('output', { bytes: templateContent.length });
     process.exit(0);
   }
 
@@ -601,7 +630,7 @@ async function main() {
     console.error('');
     console.error('You must have prompts/main.md in your project directory.');
     console.error('Run from your project directory with a prompts/main.md file.');
-    log('error', { type: 'project_context_required', path: projectMainPath }, projectDir);
+    log('error', { type: 'project_context_required', path: projectMainPath });
     process.exit(1);
   }
 
@@ -613,7 +642,7 @@ async function main() {
     // Project main.md has frontmatter - parse its includes first
     const projectMainIncludes = parseIncludesFromFrontmatter(projectMainMatch[1]);
     includes.push(...projectMainIncludes);
-    log('project_main_includes', { count: projectMainIncludes.length, files: JSON.stringify(projectMainIncludes) }, projectDir);
+    log('project_main_includes', { count: projectMainIncludes.length, files: JSON.stringify(projectMainIncludes) });
   }
 
   // Then add project main.md itself
@@ -625,18 +654,18 @@ async function main() {
     log('explicit_paths', {
       count: explicitPaths.length,
       paths: JSON.stringify(explicitPaths)
-    }, projectDir);
+    });
     includes.push(...explicitPaths);
   }
 
   // Build entity index (concepts + characters) and find matching files from primary prompt
-  const conceptIndex = buildConceptIndex(projectDir);
-  const conceptFiles = findConceptFiles(primaryPrompt, conceptIndex, projectDir);
+  const conceptIndex = buildConceptIndex();
+  const conceptFiles = findConceptFiles(primaryPrompt, conceptIndex);
 
   // Load related concepts from matched concept files
   const relatedConceptFiles = [];
   for (const conceptFile of conceptFiles) {
-    const related = loadRelatedConcepts(conceptFile, conceptIndex, projectDir);
+    const related = loadRelatedConcepts(conceptFile, conceptIndex);
     relatedConceptFiles.push(...related);
   }
 
@@ -666,7 +695,7 @@ async function main() {
   log('includes_final', {
     total: uniqueIncludes.length,
     files: JSON.stringify(uniqueIncludes)
-  }, projectDir);
+  });
 
   // Process includes with multi-path resolution
   let output = '';
@@ -675,9 +704,9 @@ async function main() {
     for (const inc of uniqueIncludes) {
       let resolved = false;
       const searchPaths = [
-        path.join(projectDir, inc),                 // 1. Relative to project directory (PROJECT)
-        path.join(skillRoot, inc),            // 2. Relative to storyshell root (FRAMEWORK)
-        path.isAbsolute(inc) ? inc : null           // 3. Absolute path
+        path.join(PROJECT_DIR, inc),         // 1. Relative to project directory (PROJECT)
+        path.join(skillRoot, inc),          // 2. Relative to storyshell root (FRAMEWORK)
+        path.isAbsolute(inc) ? inc : null   // 3. Absolute path
       ].filter(p => p !== null);
 
       for (const incPath of searchPaths) {
@@ -692,38 +721,38 @@ async function main() {
             }
 
             output += content + '\n\n';
-            log('include', { file: inc, resolved: incPath, status: 'ok' }, projectDir);
+            log('include', { file: inc, resolved: incPath, status: 'ok' });
             resolved = true;
             break;
           } catch (err) {
-            warn(`Error reading include ${incPath}: ${err.message}`, projectDir);
-            log('include', { file: inc, resolved: incPath, status: 'error', error: err.message }, projectDir);
+            warn(`Error reading include ${incPath}: ${err.message}`);
+            log('include', { file: inc, resolved: incPath, status: 'error', error: err.message });
           }
         }
       }
 
       if (!resolved) {
-        warn(`Include file not found: ${inc}`, projectDir);
-        log('include', { file: inc, status: 'missing' }, projectDir);
+        warn(`Include file not found: ${inc}`);
+        log('include', { file: inc, status: 'missing' });
       }
     }
   }
-  log("includes complete", {}, projectDir);
+  log("includes complete", {});
 
   if (primaryPrompt) {
     output += primaryPrompt;
-    log('primaryPrompt added', {}, projectDir);
+    log('primaryPrompt added', {});
   }
 
   output += "IMPORTANT: if you do save any output to a file, be sure not to clobber any of the files you may have read in as part of the context or templates!";
-  log('noclobber hint added', { file: templatePath }, projectDir);
+  log('noclobber hint added', { file: templatePath });
 
   output += templateBody;
-  log('templateBody added', { file: templatePath }, projectDir);
+  log('templateBody added', { file: templatePath });
 
   console.log(output);
-  log('output', { bytes: output.length }, projectDir);
-  log("END storyshell (js-big-skill)\n======================================================================\n", {}, projectDir);
+  log('output', { bytes: output.length });
+  log("END storyshell (js-big-skill)\n======================================================================\n", {});
 }
 
 main().catch(error => {
