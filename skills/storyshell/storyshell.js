@@ -17,6 +17,33 @@ const VOICE_MAP = {
 
 const PROJECT_DIR = process.env.PROJECT_DIR || process.cwd();
 
+// --- NEW FUNCTION: logRotation ---
+function logRotation() {
+  const logDir = path.join(PROJECT_DIR, 'log');
+  const currentLogPath = path.join(logDir, 'storyshell.log');
+
+  // Ensure log directory exists
+  if (!fs.existsSync(logDir)) {
+    fs.mkdirSync(logDir, { recursive: true });
+  }
+
+  if (fs.existsSync(currentLogPath)) {
+    const now = new Date();
+    // Using UTC to avoid local timezone issues in filename, and replace invalid chars
+    const timestamp = now.toISOString().replace(/[:.]/g, '-');
+    const oldLogPath = path.join(logDir, `storyshell.log.${timestamp}`);
+    
+    try {
+      fs.renameSync(currentLogPath, oldLogPath);
+      // Log this event to stderr, as `log` function might not be fully ready
+      console.error(`[storyshell] Moved old log to: ${oldLogPath}`);
+    } catch (err) {
+      console.error(`[storyshell] Error during log rotation: ${err.message}`);
+    }
+  }
+}
+// --- END NEW FUNCTION ---
+
 // Logging function - single-line entries to storyshell.log
 function log(operation, details = undefined) {
   const now = new Date();
@@ -223,7 +250,7 @@ function findConceptFiles(prompt, conceptIndex) {
   const tokens = extractConceptTokens(prompt);
   const matchedFiles = new Set();
 
-  log('concept_extraction', {
+  log('findConceptFiles - looking for', {
     tokens: JSON.stringify(tokens),
     source: 'user_prompt'
   });
@@ -232,6 +259,7 @@ function findConceptFiles(prompt, conceptIndex) {
   // IMPORTANT: it only works on SINGLE WORDS
   // e.g. "the twins" <> "twins"
   for (const token of tokens) {
+	log('findConceptFiles - looking for token', { token: JSON.stringify(token) });
     if (conceptIndex[token]) {
       matchedFiles.add(conceptIndex[token]);
       log('concept token matched', {
@@ -317,13 +345,13 @@ ${characterProfile}
 ## Sample of Text to Read
 ${text.substring(0, 500)}
 
-Write only the Director's Note - a very brief performance guide covering voice style, pacing, emotion, and any specific delivery instructions. Be specific and actionable.`;
+Write only the Director's Note - a very brief performance guide covering voice style, pacing, emotion, and any specific delivery instructions. Be specific and actionable. IMPORTANT: Omit any guidance about an accent.`;
 
 // log('tts', { directorsNotePrompt: directorsNotePrompt.substring(0, 200) } );
 
   try {
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.5-flash-lite',
       contents: [{ text: directorsNotePrompt }],
     });
     return response.text.trim();
@@ -378,11 +406,12 @@ function createWavHeader(dataLength, options) {
 }
 
 // Convert raw PCM to WAV
-function convertToWav(rawData, mimeType) {
+function convertToWav(rawDataBuffer, mimeType) { // rawDataBuffer is already a Buffer
   const options = parseMimeType(mimeType);
-  const wavHeader = createWavHeader(rawData.length, options);
-  const buffer = Buffer.from(rawData, 'base64');
-  return Buffer.concat([wavHeader, buffer]);
+  log('tts convertToWav options', { mimeType: mimeType, options: JSON.stringify(options) });
+  // const decodedBuffer = Buffer.from(rawData, 'base64'); // NO LONGER NEEDED
+  const wavHeader = createWavHeader(rawDataBuffer.length, options); // Use length of the passed buffer
+  return Buffer.concat([wavHeader, rawDataBuffer]); // Concatenate header with passed buffer
 }
 
 async function handleTtsRequest(templateName, primaryPrompt, projectMainPath) {
@@ -435,10 +464,12 @@ async function handleTtsRequest(templateName, primaryPrompt, projectMainPath) {
 
 	  if (characterName) {
 	    const conceptIndex = buildConceptIndex();
+	    log('tts looking for character in conceptIndex', { conceptIndex: JSON.stringify(conceptIndex) }); // DEBUG
 	    const characterFiles = findConceptFiles(characterName, conceptIndex);
 
 	    if (characterFiles.length > 0) {
 	      const charFile = characterFiles[0];
+		  log('tts matched character', { charFile: charFile });
 	      const charPath = path.join(PROJECT_DIR, charFile);
 	      const charContent = fs.readFileSync(charPath, 'utf8');
 	      characterProfile = charContent.replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
@@ -456,6 +487,7 @@ async function handleTtsRequest(templateName, primaryPrompt, projectMainPath) {
 	    .replace(/^---\n([\s\S]*?\n---\n)?/, '').trim();
 
 	  // Generate style prompt
+	  log('tts generating TTSstylePrompt' );
 	  TTSstylePrompt = await generateTTSStylePrompt(projectMainContext, characterProfile, ttsText);
 	  //log('tts', { TTSstylePrompt: TTSstylePrompt.substring(0, 200) } );
   }
@@ -478,50 +510,92 @@ async function handleTtsRequest(templateName, primaryPrompt, projectMainPath) {
 
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const model = 'gemini-2.5-flash-preview-tts';
-  const toTTS = `
-###DIRECTOR'S NOTES:
+
+  // Split text into paragraphs to avoid timeout
+  // Use a regex that splits by one or more newlines, including those with spaces between.
+  // Filters out empty strings from the split.
+  log('tts splitting text into paragraphs to avoid timeout on audio generation');  
+  const ttsParagraphs = ttsText.split(/\n\s*\n/).filter(p => p.trim().length > 0);
+  if (ttsParagraphs.length === 0) {
+    console.error('Error: No meaningful text content found for TTS after splitting.');
+    process.exit(1);
+  }
+  log('tts', { paragraphs: ttsParagraphs.length, method: 'paragraph_chunking' });
+
+  let allAudioDataBuffers = [];
+  let finalMimeType = null;
+
+  for (const [index, paragraph] of ttsParagraphs.entries()) {
+ 	  
+ 	  // Skip paragraphs that look like MD headers (e.g., "# POV 1-1: The Hundred")
+ 	  if (/^\s*#+\s+/.test(paragraph)) {
+ 	    log('tts skipping MD header', { header: paragraph.trim() });
+ 	    continue;
+ 	  }
+ 	  
+ 	  const paragraphContentText = `
+### DIRECTOR'S NOTES:
 ${TTSstylePrompt}
 
-###TEXT TO SPEAK:
-${ttsText}
+### TEXT TO SPEAK:
+${paragraph}
 `;
-  const config = {
-    temperature: 1,
-    responseModalities: ['audio'],
-    speechConfig: {
-      voiceConfig: {
-        prebuiltVoiceConfig: { voiceName }
+
+    const config = {
+      temperature: 1,
+      responseModalities: ['audio'],
+      speechConfig: {
+        voiceConfig: {
+          prebuiltVoiceConfig: { voiceName }
+        }
       }
+    };
+    const contents = [{ role: 'user', parts: [{ text: paragraphContentText }] }];
+
+    log('tts calling API for chunk', { index: index, chunkLength: paragraph.length, model: model });
+    log('tts', { paragraph: paragraph }); // DEBUG
+    try {
+      const response = await ai.models.generateContentStream({ model, config, contents });
+      for await (const chunk of response) {
+        if (!chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData) {
+          log('tts API chunk missing inlineData', { chunk_details: JSON.stringify(chunk).substring(0, 500) });
+          continue; // Skip to next chunk
+        }
+        const inlineData = chunk.candidates[0].content.parts[0].inlineData;
+        if (!inlineData.data || inlineData.data.length === 0) {
+          log('tts API inlineData.data is empty', { chunk_details: JSON.stringify(chunk).substring(0, 500) });
+          continue; // Skip to next chunk
+        }
+        // Decode each chunk's data immediately and store buffer
+        const decodedChunkBuffer = Buffer.from(inlineData.data, 'base64');
+        
+        if (!finalMimeType) {
+          finalMimeType = inlineData.mimeType; // Capture mimeType from the first chunk
+          log('tts captured finalMimeType', { mimeType: finalMimeType });
+        }
+        allAudioDataBuffers.push(decodedChunkBuffer); // Pushes decoded Buffer
+        log('tts audio chunk received', { size: decodedChunkBuffer.length, current_total_chunks: allAudioDataBuffers.length });
+      }
+    } catch (apiError) {
+      warn(`Gemini API call failed for chunk ${index}: ${apiError.message}`);
+      console.error(`Error during TTS generation for a text chunk. Exiting.`);
+      process.exit(1); // Exit on any chunk failure
     }
-  };
-
-  log('tts - calling', { model : model });
-  const contents = [{ role: 'user', parts: [{ toTTS: toTTS }] }];
-  const response = await ai.models.generateContentStream({
-    model, config, contents
-  });
-
-  let audioChunks = [];
-  let mimeType = null;
-
-  log('tts - waiting for audio');
-  for await (const chunk of response) {
-    if (!chunk.candidates?.[0]?.content?.parts?.[0]?.inlineData) continue;
-    const inlineData = chunk.candidates[0].content.parts[0].inlineData;
-    mimeType = inlineData.mimeType;
-    audioChunks.push(inlineData.data);
-    log('tts - got audio chunk', { count: audioChunks.length });
   }
 
-  if (audioChunks.length === 0) {
-    console.error('Error: No audio data received from Gemini API');
+  if (allAudioDataBuffers.length === 0) {
+    console.error('Error: No audio data received from Gemini API after all chunks.');
     process.exit(1);
   }
 
   // Convert to WAV
-  log('tts - converting audio to WAV');
-  const combinedBase64 = audioChunks.join('');
-  const wavBuffer = convertToWav(combinedBase64, mimeType);
+  log('tts final allAudioData content', {
+    total_items: allAudioDataBuffers.length,
+    item_lengths: JSON.stringify(allAudioDataBuffers.map(item => item.length)).substring(0, 500)
+  });
+  log('tts converting all audio to WAV');
+  const combinedBuffer = Buffer.concat(allAudioDataBuffers);
+  const wavBuffer = convertToWav(combinedBuffer, finalMimeType);
 
   // Save to voice directory
   const timestamp = Date.now();
@@ -534,6 +608,10 @@ ${ttsText}
 }
 
 async function main() {
+  // --- NEW CALL ---
+  logRotation(); // Call at the very beginning to rotate logs
+  // --- END NEW CALL ---
+
   // Setup directory paths - must be before log function
   const baseDir = process.env.SKILL_DIR || process.cwd();
   const skillRoot = path.join(baseDir, '../..');  // Go up to storyshell root

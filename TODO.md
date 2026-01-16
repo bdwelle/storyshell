@@ -19,9 +19,8 @@
 [x] try Gemini TTS (vs Elevenlabs) https://ai.google.dev/gemini-api/docs/speech-generation
 Zephyr -- Bright **
 Leda -- Youthful ***
-[o] integrate Gemini TTS into main process flow
-
-[x] show 
+[x] integrate Gemini TTS into main process flow
+[x]	solve timeout issue with chunking of TTS text
 
 [ ] set permissions to * allow so that the writer agent doesn't stop to ask for permission to access a directory
 [ ] Add Gemini jailbreak – necessary? https://www.injectprompt.com/p/gemini-25-flash-jailbreak-aleph-null
