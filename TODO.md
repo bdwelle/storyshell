@@ -16,8 +16,12 @@
 [x] move add templateBody to end of context built by storyshell.js 
 [x] integrate Elevenlabs TTS subagent with primary Storyshell agent
 [x] Add a second Writer agent defined in MD that uses Gemini
-[ ] integrate TTS subagent logging with primary Storyshell logging? 
-[ ] try Gemini TTS (vs Elevenlabs)
+[x] try Gemini TTS (vs Elevenlabs) https://ai.google.dev/gemini-api/docs/speech-generation
+Zephyr -- Bright **
+Leda -- Youthful ***
+[o] integrate Gemini TTS into main process flow
+
+[x] show 
 
 [ ] set permissions to * allow so that the writer agent doesn't stop to ask for permission to access a directory
 [ ] Add Gemini jailbreak – necessary? https://www.injectprompt.com/p/gemini-25-flash-jailbreak-aleph-null

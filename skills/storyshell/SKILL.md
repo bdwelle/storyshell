@@ -1,12 +1,12 @@
 ---
 name: storyshell
-description: Simple story generation assistant for fiction writing. Use for creating fictional characters, scenes, storylines, pov, and prose
+description: Simple story generation assistant for fiction writing and text-to-speech. Use for creating fictional characters, scenes, storylines, pov, prose, voice, speech, audio. 
 ---
 
 ## How to use me 
 
-- Use this skill for creating fictional characters, scenes, storylines, pov, and prose.
-- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing, or punch up: 
+- Use this skill for creating fictional characters, scenes, storylines, pov, prose, and text-to-speech voice. 
+- When the user's request includes words such as: character, scene, storyline, story, prose, pov, fiction, writing, punch up, speak, say, voice, tts: 
 
 1. Invoke the appropriate template with this **invocation pattern**
 
@@ -20,13 +20,11 @@ EOF
 3. Take that output and send it to the LLM to generate the content
 4. Save the generated content if the user requests it
 
-- When the user asks to "speak" or "say" something, or to "generate audio" or "tts" for a piece of text, use the `elevenlabs-tts` subagent. 
-
 **Key points:**
 - Set `PROJECT_DIR` env var to the **original working directory** where opencode was invoked - this ensures storyshell.js can find project files even after cd to skill directory
 - Set `SKILL_DIR` env var to the directory where the storyshell skill in installed
 - Pass the **original user message** via HEREDOC after `<<<` - this ensures storyshell.js has access to the actual prompt with all formatting and context
-- `<template-name>` is one of: `character-interview`, `character`, `scene-suggest`, `scene`, `storyline-suggest`, `storyline`, `pov`, `prose`
+- `<template-name>` is one of: `character-interview`, `character`, `scene-suggest`, `scene`, `storyline-suggest`, `storyline`, `pov`, `prose`, `tts`
 - The script automatically extracts filenames, concept tokens, and character names from the user prompt
 - All relevant context is loaded and included in the output
 
@@ -49,6 +47,34 @@ EOF
 
 ## Usage
 
+
+- When the user asks to "speak" or "say" something, or to "generate audio" or "tts" for a piece of text, use the `tts` template.
+
+### Text-to-speech
+
+When user says something like:
+- "speak tmp/tts-test-1.md"
+- "say tmp/tts-test-1.md"
+- "tts tmp/tts-test-1.md"
+- "generate tts tmp/tts-test-1.md"
+- "generate speech tmp/tts-test-1.md"
+
+Run:
+```bash
+cd <SKILL_DIR> && PROJECT_DIR="{cwd}" bash -c 'node storyshell.js tts' <<< "generate tts <target-file>"
+```
+
+The script will:
+1. Parse the target file's frontmatter (extract `pov:` field)
+2. Load the character file for the POV character
+3. Generate a Director's Note (style prompt) via LLM
+4. Call Gemini TTS with text, style prompt, and voice
+5. Save audio to `voice/tts-<timestamp>-<filename>.wav`
+6. Output the audio file path to stdout
+
+**Voice Mapping:** is defined in `storyshell.js` VOICE_MAP constant
+If no voice mapping exists, defaults to 'Leda'.
+
 ### Punch-up Writing (Interactive Process)
 
 When user says something like:
@@ -57,19 +83,7 @@ When user says something like:
 Run:
 - invoke the `punch-up` template
 
-The punch-up template will use the context to "punch up" the prose or pov narrative
-
-**Example Workflow:**
-```
-User: "Develop a character named Bo, age 15, male"
-
-You: 
-1. invoke the `character-interview` template
-2. Show the generated questions to user
-3. User answers the questions in conversation
-4. invoke the `character` template
-   (with full conversation in context)
-5. Generate and show the complete character profile
+The output will be a complete prompt. Send it to the LLM to generate the punched-up prose. 
 ```
 
 ### Develop a Character (Interactive Process)
